@@ -1,6 +1,11 @@
 # git提交时忽略的文件
 
 
+# pycharm
+.idea/
+
+
+
 # __pycache__/
 
 
