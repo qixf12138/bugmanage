@@ -1,0 +1,116 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="{% static "css/bootstrap.min.css" %}">
+    <style>
+      .account{
+          width: 600px;
+          margin: 0 auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="account">
+      <h1>注册</h1>
+        <form id="user_register_form">
+        {% csrf_token %}
+          {% for field in form %}
+            {% if field.name == "code" %}
+              <div class="form-group">
+                  <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                  <div class="row">
+                    <div class="col-xs-12 col-md-8">{{ field }}<span style="color: red">{{ field.errors.0 }}</span></div>
+                    <div class="col-xs-12 col-md-4">
+                      <input id="send_code_btn" type="button" class="btn btn-default" value="获取验证码" onclick="send_register_code()">
+                    </div>
+                  </div>
+              </div>
+
+            {% else %}
+              <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                <span style="color: red">{{ field.errors.0 }}</span>
+              </div>
+            {% endif %}
+          {% endfor %}
+          <div class="form-group">
+            <button type="button" class="btn btn-default" onclick="user_register()">注册</button>
+          </div>
+        </form>
+    </div>
+    <script src="{% static "js/jquery.js" %}"></script>
+    <script src="{% static "js/bootstrap.min.js" %}"></script>
+    <script>
+      var wait = 60;
+      $(function(){
+
+      })
+
+      function  set_btn_disabled() {
+          time_sleep($("#send_code_btn"))
+      }
+      //获取验证码
+      function send_register_code(){
+          $.ajax({
+              url: "/user/send_sms/",
+              method: "get",
+              data:{
+                  "req": "register",
+                  "mobile_phone": $("#id_mobile_phone").val(),
+              },
+              dataType:"json",
+              success:function (res){
+                  if (res.status == 200){
+                      console.log("验证码发送成功:"+res.code)
+                      set_btn_disabled()
+                  }else{
+                      alert(res.error_msg)
+                  }
+              }
+          })
+      }
+      //使按钮变为disabled状态，每个一秒执行一次wait--，当wait<=1时，不在执行
+      function time_sleep(o){
+          if(wait <= 1){
+              o.attr("disabled", false)
+              o.val("获取验证码");
+              wait = 60;
+
+          } else {
+              o.attr("disabled", true)
+              o.val("重新发送（"+ wait +")") ;
+              wait --
+              setTimeout(function (){
+                  time_sleep(o)
+              },1000)
+          }
+      }
+
+      //用户注册
+      function  user_register(){
+          $(".form-control").next().text("")
+          $.ajax({
+              url: "/user/register/",
+              data: $("#user_register_form").serialize(),
+              method: "post",
+              dataType: "json",
+              success:function (res){
+                  console.log(res.error_msg)
+                  if (res.status == 200){
+                      console.log("success")
+                      location.reload()
+                  } else {
+                      $.each(res.error_msg,function(name,msg){
+                          $("#id_"+name).next().text(msg[0])
+                      })
+                  }
+              }
+          })
+      }
+    </script>
+  </body>
+</html>

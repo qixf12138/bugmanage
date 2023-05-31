@@ -69,10 +69,7 @@ def send_sms(param_list, phone_number, template_id):
 
         resp = client.SendSms(req)
         # 输出json格式的字符串回包
-        print(resp.to_json_string(indent=2))
+        return resp.to_json_string(indent=2)
 
     except TencentCloudSDKException as err:
-        print(err)
-
-
-send_sms(["52112"], "+8618353636028", 1815688)
+        return err
