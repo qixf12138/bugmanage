@@ -1,9 +1,9 @@
 {% extends "layout/base.html" %}
-{% block title %}注册{% endblock %}
-{% block  content%}
+{% block title %}登录{% endblock %}
+{% block content %}
   <div class="container">
-      <h1>注册</h1>
-        <form id="user_register_form">
+      <h1>登录</h1>
+        <form id="user_sms_login_form">
         {% csrf_token %}
           {% for field in form %}
             {% if field.name == "code" %}
@@ -26,11 +26,13 @@
             {% endif %}
           {% endfor %}
           <div class="form-group">
-            <button type="button" class="btn btn-default" onclick="user_register()">注册</button>
+            <button type="button" class="btn btn-default" onclick="user_sms_login()">登录</button>
           </div>
         </form>
     </div>
-{% endblock %}
+{% endblock%}
+
+
 {% block js %}
   <script>
       var wait = 60;
@@ -73,20 +75,25 @@
               },1000)
           }
       }
-
-      //用户注册
-      function  user_register(){
+      //用户登录
+      function  user_sms_login(){
           $(".form-control").next().text("")
           $.ajax({
-              url: "{% url 'user:register' %}",
-              data: $("#user_register_form").serialize(),
+              url: "{% url 'user:smslogin' %}",
+              data: $("#user_sms_login_form").serialize(),
               method: "post",
               dataType: "json",
               success:function (res){
                   console.log(res.error_msg)
-                  if (res.status == 304){
-                    window.location.href=res.redirect_url
-                  } else {
+                  if (res.status == 200){
+                      console.log("success")
+                      location.reload()
+                  }
+                  else if(res.status == 304){
+                      window.location.href=res.redirect_url
+                  }
+                  else {
+                      console.log("error..")
                       $.each(res.error_msg,function(name,msg){
                           $("#id_"+name).next().text(msg[0])
                       })
@@ -94,5 +101,6 @@
               }
           })
       }
-    </script>
-{% endblock%}
+
+  </script>
+{% endblock %}

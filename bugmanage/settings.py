@@ -48,6 +48,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'utills.middleware.vaildlogin.LoginVerification',
 ]
 
 ROOT_URLCONF = 'bugmanage.urls'
@@ -55,7 +56,7 @@ ROOT_URLCONF = 'bugmanage.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': []
+        'DIRS': [os.path.join("templates")]
         ,
         'APP_DIRS': True,
         'OPTIONS': {
@@ -149,6 +150,11 @@ CACHES = {
         }
     }
 }
+
+#登陆后跳转页面
+
+LOGIN_REDIRECT_URL = "/user/info/"
+LOGOUT_REDIRECT_URL = "/user/login/"
 
 # 导入自己的settings.py
 try:

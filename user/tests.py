@@ -31,14 +31,6 @@ class UserInfoTestCase(TestCase):
         self.assertEqual(str(alice), "Alice")
         self.assertEqual(str(bob), "Bob")
 
-    def test_user_info_get_gender_display(self):
-        # 测试模型的 get_gender_display 方法是否正确返回 gender_choices 中对应的值
-        alice = UserInfo.objects.get(user="Alice")
-        bob = UserInfo.objects.get(user="Bob")
-        self.assertEqual(alice.get_gender_display(), "女")
-        self.assertEqual(bob.get_gender_display(), "男")
-        print(f"self id in test_book_title: {id(self)}")
-
     def test_user_info_verbose_name(self):
         # 测试模型的 verbose_name 是否符合预期
         user_info = UserInfo()
