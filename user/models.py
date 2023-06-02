@@ -9,8 +9,8 @@ class UserInfo(models.Model):
     mobile_phone = models.CharField(verbose_name="手机号", max_length=32)
 
     class Meta:
-        # verbose_name = "用户信息"
-        # verbose_name_plural = "用户信息"
+        verbose_name = "用户信息"
+        verbose_name_plural = "用户信息"
         pass
 
     def __str__(self):

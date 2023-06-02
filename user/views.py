@@ -1,7 +1,11 @@
 import random
+from io import BytesIO
 
+import requests
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+
 from bugmanage import settings
 from django_redis import get_redis_connection
 
@@ -9,9 +13,9 @@ from user.models import UserInfo
 from utills.tencent.sms import send_sms
 from utills.projectutills.tools import generate_code, valid_code, ip_is_limit
 from utills.datavalid.datavalid import mobilephone_number_vaild
-from utills.projectutills.randomobj import create_random_str
+from utills.projectutills.randomobj import create_random_str, create_vcode_img
 from utills.projectutills.encrypt import md5
-from user.forms import RegisterModelForm, SMSLoginModelForm
+from user.forms import RegisterModelForm, SMSLoginModelForm, LoginModelForm
 
 
 def send_short_msg(request):
@@ -68,6 +72,9 @@ def user_register(request):
             # 获取用户输入的验证码
             user_code = form.cleaned_data["code"]
             mobile_phone = form.cleaned_data["mobile_phone"]
+            print("注册表单验证通过")
+            print(mobile_phone, user_code)
+            print(valid_code(mobile_phone, user_code))
             if not valid_code(mobile_phone, user_code):
                 form.add_error("code", "验证码错误!")
                 content["error_msg"] = form.errors
@@ -85,12 +92,62 @@ def user_register(request):
     return render(request, "user/register.html", {"form": form})
 
 
-# 登录页面和密码登录请求
+# 登录页面(账号登陆和手机号登录)
+
 def user_login(request):
     if request.method == "GET":
-        form = SMSLoginModelForm()
-        content = {"form": form}
+        sms_form = SMSLoginModelForm()
+        user_form = LoginModelForm()
+        content = {"sms_form": sms_form,
+                   "user_form": user_form}
+
+    elif request.method == "POST":
+        content = {}
+        user_form = LoginModelForm(data=request.POST)
+
+        try:
+            # 如果用户没输入的验证码，或者没有获取验证码，捕获异常，返回验证码错误
+            code = request.session.get("img_code").upper()
+            user_input_code = request.POST.get("img_code").upper()
+        except Exception as e :
+            # 清除表单自带的数据,实现先显示验证码，再验证账号。
+            user_form.errors.clear()
+            user_form.add_error("img_code", "验证码错误！")
+            content["error_msg"] = user_form.errors
+            return JsonResponse(content)
+        # 验证码验证通过
+        if code == user_input_code:
+            # 表单验证
+            if user_form.is_valid():
+                user_name = user_form.cleaned_data.get("user")
+                user = UserInfo.objects.filter(user=user_name).first()
+                # 保存登录状态
+                request.session["info"] = user.user
+                content["status"] = 304
+                content["redirect_url"] = settings.LOGIN_REDIRECT_URL
+                request.session["img_code"] = create_random_str(6)
+                return JsonResponse(content)
+            else:
+                content["status"] = 403
+        else:
+            # 验证码验证不通过,清除额外的验证信息，只返回验证码错误提示
+            user_form.errors.clear()
+            user_form.add_error("img_code", "验证码错误！")
+        content["error_msg"] = user_form.errors
+        return JsonResponse(content)
+    else:
+        return HttpResponse("请求方式错误")
     return render(request, "user/login.html", content)
+
+
+def verif_code(request):
+    # 生成验证码，字符串验证码加入session,返回图片验证码
+    img, code = create_vcode_img()
+    request.session["img_code"] = code
+    request.session.set_expiry(60*5)
+    stream = BytesIO()
+    img.save(stream, "png")
+    return HttpResponse(stream.getvalue())
 
 
 # Ajax SMS登录请求

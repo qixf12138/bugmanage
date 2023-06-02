@@ -1,11 +1,17 @@
 {% extends "layout/base.html" %}
 {% block title %}登录{% endblock %}
 {% block content %}
-  <div class="container">
-      <h1>登录</h1>
-        <form id="user_sms_login_form">
+<div class="container">
+  <ul class="nav nav-tabs" role="tablist">
+    <li role="presentation" class="active"><a href="#smslogin" aria-controls="home" role="tab" data-toggle="tab">短信登陆</a></li>
+    <li role="presentation"><a href="#profile" aria-controls="profile" role="tab" data-toggle="tab">账号登录</a></li>
+  </ul>
+  <div class="tab-content">
+    <div role="tabpanel" class="tab-pane active" id="smslogin">
+      <div class="container">
+       <form id="user_sms_login_form">
         {% csrf_token %}
-          {% for field in form %}
+          {% for field in sms_form %}
             {% if field.name == "code" %}
               <div class="form-group">
                   <label for="{{ field.id_for_label }}">{{ field.label }}</label>
@@ -29,7 +35,42 @@
             <button type="button" class="btn btn-default" onclick="user_sms_login()">登录</button>
           </div>
         </form>
+      </div>
     </div>
+    <div role="tabpanel" class="tab-pane" id="profile">
+      <div class="container">
+       <form id="user_login_form">
+        {% csrf_token %}
+          {% for field in user_form %}
+            {% if field.name == "img_code" %}
+              <div class="form-group">
+                  <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                  <div class="row">
+                    <div class="col-xs-12 col-md-8">{{ field }}<span style="color: red">{{ field.errors.0 }}</span></div>
+                    <div class="col-xs-12 col-md-4">
+                      <img src="{% url "user:verifcode" %}" id="img_code" onclick="refresh_img_code()">
+                    </div>
+                  </div>
+              </div>
+
+            {% else %}
+              <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                <span style="color: red">{{ field.errors.0 }}</span>
+              </div>
+            {% endif %}
+          {% endfor %}
+          <div class="form-group">
+            <button type="button" class="btn btn-default" onclick="user_login()">登录</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 {% endblock%}
 
 
@@ -59,6 +100,10 @@
               }
           })
       }
+      //刷新图片验证码
+      function refresh_img_code(){
+        document.getElementById("img_code").src = "/user/vcode/?=" + Math.random();
+      }
       //使按钮变为disabled状态，每个一秒执行一次wait--，当wait<=1时，不在执行
       function time_sleep(o){
           if(wait <= 1){
@@ -75,7 +120,7 @@
               },1000)
           }
       }
-      //用户登录
+      //sms登录
       function  user_sms_login(){
           $(".form-control").next().text("")
           $.ajax({
@@ -100,6 +145,29 @@
                   }
               }
           })
+      }
+      //账号登录
+      function user_login(){
+          $(".form-control").next().text("")
+          $.ajax({
+              url:"{% url 'user:login' %}",
+              method:"post",
+              data:$("#user_login_form").serialize(),
+              dataType:"json",
+              success:function (res){
+                  if(res.status==304){
+                      window.location.href=res.redirect_url
+                  }
+                  else{
+                      $.each(res.error_msg,function(name, msg){
+                          $("#id_"+name).next().text(msg[0])
+                      })
+                      if(res.status==403){
+                      refresh_img_code()
+                  }
+              }
+          }
+      })
       }
 
   </script>

@@ -68,11 +68,10 @@
     </nav>
     {% block content %}
     {% endblock %}
-
-    {% block js %}
-    {% endblock %}
     <script src="{% static "js/jquery.js" %}"></script>
     <script src="{% static "js/bootstrap.min.js" %}"></script>
     <script src="{% static "js/fontawesome.min.js" %}"></script>
+    {% block js %}
+    {% endblock %}
   </body>
 </html>

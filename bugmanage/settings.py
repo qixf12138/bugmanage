@@ -151,8 +151,7 @@ CACHES = {
     }
 }
 
-#登陆后跳转页面
-
+# 登陆后跳转页面
 LOGIN_REDIRECT_URL = "/user/info/"
 LOGOUT_REDIRECT_URL = "/user/login/"
 

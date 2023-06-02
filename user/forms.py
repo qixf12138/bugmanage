@@ -35,20 +35,23 @@ class RegisterModelForm(BootStrapModelsForm):
         validators=[RegexValidator(r"^\d{6}$", "验证码格式错误,请输入6位数字的验证码")]
     )
 
-    # def clean_user(self):
-    #     user_name = self.cleaned_data["user"]
-    #     user = UserInfo.objects.filter(user=user_name).exists()
-    #     if not user:
-    #         raise ValidationError("用户名已存在")
-    #     return user_name
+    def clean_user(self):
+        # 验证用户名是否存在
+        user_name = self.cleaned_data.get("user")
+        if not user_name:
+            raise ValidationError("用户名不能为空！")
+        user = UserInfo.objects.filter(user=user_name).exists()
+        if user:
+            raise ValidationError("用户名已存在！")
+        return user_name
 
-    # def clean_mobile_phone(self):
-    #     # 验证手机号是否已经被注册
-    #     mobile_phone = self.cleaned_data["mobile_phone"]
-    #     mbp = UserInfo.objects.filter(mobile_phone=mobile_phone).exists()
-    #     if not mbp:
-    #         raise ValidationError("手机号已经被注册")
-    #     return mbp
+    def clean_mobile_phone(self):
+        # 验证手机号是否已经被注册
+        mobile_phone = self.cleaned_data["mobile_phone"]
+        mbp = UserInfo.objects.filter(mobile_phone=mobile_phone).exists()
+        if mbp:
+            raise ValidationError("手机号已经被注册")
+        return mobile_phone
 
     def clean_confirm_password(self):
         # 判断md5加密后“密码”与“确认密码”的内容是否一致
@@ -87,12 +90,14 @@ class SMSLoginModelForm(BootStrapModelsForm):
     )
 
     def clean_mobile_phone(self):
+        # 手机号格式验证
         mobile_phone = self.cleaned_data.get("mobile_phone")
         if not mobile_phone:
             raise ValidationError("手机号不能为空！")
         return mobile_phone
 
     def clean_code(self):
+        # 校验验证码
         code = self.cleaned_data.get("code")
         mobile_phone = self.cleaned_data.get("mobile_phone")
         if not code:
@@ -102,4 +107,42 @@ class SMSLoginModelForm(BootStrapModelsForm):
         return code
 
 
+class LoginModelForm(BootStrapModelsForm):
+    """
+    账号登录表单
+    """
+    password = forms.CharField(
+        label="密码",
+        widget=forms.PasswordInput
+    )
+
+    img_code = forms.CharField(
+        label="验证码",
+        widget=forms.TextInput
+    )
+
+    class Meta:
+        model = UserInfo
+        fields = ["user", "password", "img_code"]
+
+    def clean_img_code(self):
+        code = self.cleaned_data.get("img_code")
+        if not code:
+            raise ValidationError("验证码不能为空！")
+        return code
+
+    def clean_user(self):
+        user_name = self.cleaned_data.get("user")
+        user = UserInfo.objects.filter(user=user_name).exists()
+        if not user:
+            raise ValidationError("用户名不存在！")
+        return user_name
+
+    def clean_password(self):
+        password = md5(self.cleaned_data.get("password"))
+        user_name = self.cleaned_data.get("user")
+        user = UserInfo.objects.filter(user=user_name, password=password).exists()
+        if not user:
+            raise ValidationError("用户名或密码错误！")
+        return password
 
