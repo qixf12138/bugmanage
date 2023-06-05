@@ -5,13 +5,14 @@ from django.shortcuts import redirect
 
 class LoginVerification(MiddlewareMixin):
 
-    exclued_path = ["/user/login/", "/user/smslogin/", "/user/register/", "/user/sendsms/", "/user/vcode/", "/static/"]
+    exclued_path = ["/user/login/", "/user/smslogin/", "/user/register/",
+                    "/user/sendsms/", "/user/vcode/", "/static/"]
 
     def process_request(self, request):
         if request.path in self.exclued_path:
             return
         else:
-            user = request.session.get("info")
+            user = request.session.get("user")
             if user:
                 return
             else:

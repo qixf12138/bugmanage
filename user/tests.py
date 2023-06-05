@@ -4,6 +4,7 @@ from django.test import TestCase, Client
 # 导入你的视图函数
 
 
+
 class UserInfoTestCase(TestCase):
     @classmethod
     def setUpTestData(cls):

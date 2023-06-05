@@ -1,0 +1,56 @@
+<div class="panel panel-default" style="margin-top: 20px" id="id_panel_star">
+    <div class="panel-heading">星标项目</div>
+    <div class="panel-body">
+      {% for project in user_project %}
+          {% if project.star_mark == True %}
+          <div class="col-xs-6 col-sm-2"  onclick="chanage_confirm_btn_alert({{ project.project_id}})" data-toggle="modal" data-target="#myModal" style="background-color: {{ project.project.get_color_display }}"; >
+            <div class="row 1" style="height: 80%;">
+              {{project.project.name}}
+            </div>
+            <div class="row 2" style="height: 20%; background-color:white;" >
+          {% if project.star_mark == True  %}
+          <i class="fa-solid fa-star fa-fw" style="color: orange" onclick="star_mark({{ project.project_id }})"></i>
+          {% else %}
+          <i class="fa-regular fa-star fa-fw"  onclick="star_mark({{ project.project_id }})"></i>
+          {% endif %}
+        {{ project.project.name }}
+          <span>
+            <i class="fa-solid fa-person fa-fw" ></i>
+            {{ project.user_num }}
+          </span>
+        </div>
+          </div>
+        {% endif %}
+      {% endfor %}
+
+  </div>
+  </div>
+<div class="panel panel-default" id="id_panel_join_panel">
+    <div class="panel-heading">我参与的项目</div>
+    <div class="panel-body">
+    <div class="row">
+    {% for project in user_project %}
+    <div class="col-xs-6 col-sm-2">
+      <div class="row 1" style="height: 80%;background-color: {{project.project.get_color_display}};"  onclick="chanage_confirm_btn_alert({{ project.project_id}})" data-toggle="modal" data-target="#myModal"  >
+        <span class="container" style="text-align: center;">
+          {{ project.peoject.describe }}
+          {{ project.star_mark  }}
+        </span>
+      </div>
+      <div class="row 2" style="height: 20%; background-color:white;" >
+        {% if project.star_mark == True  %}
+        <i class="fa-solid fa-star fa-fw" style="color: orange" onclick="star_mark({{ project.project_id }})"></i>
+        {% else %}
+        <i class="fa-regular fa-star fa-fw"  onclick="star_mark({{ project.project_id }})"></i>
+        {% endif %}
+      {{ project.project.name }}
+        <span>
+          <i class="fa-solid fa-person fa-fw" ></i>
+          {{ project.user_num }}
+        </span>
+      </div>
+    </div>
+    {% endfor %}
+    </div>
+  </div>
+  </div>

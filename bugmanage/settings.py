@@ -38,6 +38,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'user.apps.UserConfig',
+    'project.apps.ProjectConfig',
+    'system.apps.SystemConfig',
+    'crispy_forms',
 ]
 
 MIDDLEWARE = [
@@ -152,8 +155,11 @@ CACHES = {
 }
 
 # 登陆后跳转页面
-LOGIN_REDIRECT_URL = "/user/info/"
+LOGIN_REDIRECT_URL = "/project/list/"
 LOGOUT_REDIRECT_URL = "/user/login/"
+
+# 设置bootstrap版本
+CRISPY_TEMPLATE_PACK = 'bootstrap3'
 
 # 导入自己的settings.py
 try:

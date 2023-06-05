@@ -80,7 +80,7 @@ def user_register(request):
                 content["error_msg"] = form.errors
             else:
                 form.save()
-                request.session["info"] = form.cleaned_data.get("user")
+                request.session["user"] = form.cleaned_data.get("user")
                 content["status"] = 304
                 content["redirect_url"] = settings.LOGIN_REDIRECT_URL
             return JsonResponse(content)
@@ -122,7 +122,7 @@ def user_login(request):
                 user_name = user_form.cleaned_data.get("user")
                 user = UserInfo.objects.filter(user=user_name).first()
                 # 保存登录状态
-                request.session["info"] = user.user
+                request.session["user"] = user.user
                 content["status"] = 304
                 content["redirect_url"] = settings.LOGIN_REDIRECT_URL
                 request.session["img_code"] = create_random_str(6)
@@ -144,7 +144,7 @@ def verif_code(request):
     # 生成验证码，字符串验证码加入session,返回图片验证码
     img, code = create_vcode_img()
     request.session["img_code"] = code
-    request.session.set_expiry(60*5)
+    #request.session.set_expiry(60*24)
     stream = BytesIO()
     img.save(stream, "png")
     return HttpResponse(stream.getvalue())
@@ -162,15 +162,15 @@ def user_login_sms(request):
             if user:
                 # 登陆成功，跳转用户信息页面
                 print("登陆成功")
-                request.session["info"] = user.user
+                request.session["user"] = user.user
                 content["redirect_url"] = settings.LOGIN_REDIRECT_URL
             else:
                 # 没有注册，随机生成用户名
                 user_name = "user_" + create_random_str()
                 mobile_phone = form.cleaned_data.get("mobile_phone")
                 password = md5("123456")
-                user = UserInfo.objects.create(user=user_name, password=password, mobile_phone=mobile_phone)
-                request.session["info"] = user.user
+                user = UserInfo.objects.create(user=user_name, password=password, mobile_phone=mobile_phone, email="")
+                request.session["user"] = user.user
                 content["redirect_url"] = settings.LOGIN_REDIRECT_URL
         else:
             print("验证失败")
@@ -183,7 +183,7 @@ def user_login_sms(request):
 
 def user_info(request):
     content = {}
-    username = request.session.get("info")
+    username = request.session.get("user")
     if username:
         user = UserInfo.objects.filter(user=username).first()
         content["user"] = user
