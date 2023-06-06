@@ -1,0 +1,212 @@
+{% extends "layout/manage.html" %}
+{% block title %}系统管理{% endblock %}
+{% block css%}
+<style>
+  div .row .desc{
+    height: 100px;
+
+  }
+  div .row .title{
+      height: 20px;
+      background-color:white;
+  }
+
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <button type="button" class="btn btn-primary btn-lg" onclick="chanage_confirm_btn_add()">
+    新建项目
+    </button>
+    <div class="panel panel-default" style="margin-top: 20px">
+    <div class="panel-heading">星标项目</div>
+    <div class="panel-body" id="id_panel_body_star">
+  </div>
+  </div>
+    <div class="panel panel-default" >
+      <div class="panel-heading">我创建的项目</div>
+        <div class="panel-body" id="id_panel_body_create">
+        </div>
+    </div>
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title" id="myModalLabel">Modal title</h4>
+        </div>
+        <div class="modal-body">
+        <form id="id_project_form">
+          {% csrf_token %}
+          {% for field in form %}
+            <div class="form-group">
+                  <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                  {{ field }}
+                  <span class="span_project_error_msg" style="color: red">{{ field.errors.0 }}</span>
+                </div>
+          {% endfor %}
+        </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+          <button type="button" id="id_confrim_btn" class="btn btn-primary">确定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+{% endblock %}
+{% block js %}
+  <script>
+    $(function (){
+        project_list()
+    })
+
+
+    //获取项目列表
+    function project_list(){
+        $.ajax({
+            url: "{% url 'system:project_list' %}",
+            method: "get",
+            dataType: "html",
+            success: function(res){
+                if (res){
+                    project_star = $(res).filter("#id_panel_body_star")
+                    $("#id_panel_body_star").html(project_star)
+                    project_create = $(res).filter("#id_panel_body_create")
+                    $("#id_panel_body_create").html(project_create)
+                }else{
+                    alert("请求时发生错误")
+                    console.log(res)
+                }
+            }
+
+        })
+    }
+
+    //关闭模态框，获取最新project_list
+    function success_request(modal){
+        modal.modal('toggle');
+        project_list()
+    }
+
+    //新建项目
+    function project_add(){
+        $.ajax({
+            url:"{% url 'system:project_add' %}",
+            method:"post",
+            data:$("#id_project_form").serialize(),
+            dataType:"json",
+            success:function (res){
+                if(res.status==200){
+                    success_request($('#myModal'))
+                }
+                else{
+                    $.each(res.error_msg,function (name,msg){
+                        $("#id_"+name).next().text(msg)
+                    })
+                }
+            }
+        })
+    }
+
+    //修改项目
+    function project_alter(project_id){
+        $.ajax({
+            url: "{% url 'system:project_alter' %}",
+            method: "post",
+            dataType: "json",
+            data: {
+                id: project_id,
+                name : $("#id_name").val(),
+                color: $("#id_color").val(),
+                describe: $("#id_describe").val(),
+                star_mark: $("#id_star_mark").is(":checked"),
+                csrfmiddlewaretoken: $("#id_project_form").children(0).val(),
+            },
+            success:function (res){
+                if(res.status==200){
+                    success_request($('#myModal'))
+                }
+                else if(res.status==400){
+                    if(re.error_msg){
+                        $.each(res.error_msg,function (name,msg){
+                          $("#id_"+name).next().text(msg)
+                        })
+                    }
+                    else{
+                        alert("请求错误！")
+                    }
+                }
+            }
+        })
+    }
+
+    //清空表单信息
+    function clear_modal_form(){
+        $(".span_project_error_msg").text("")
+        $("#id_project_form").reset()
+    }
+
+    //设置modal表单确定按钮的onclick事件（点击新建按钮）
+    function chanage_confirm_btn_add(){
+        clear_modal_form()
+        $("#id_project_form").trigger("reset")
+        $("#id_confrim_btn").attr("onclick", "project_add()");
+        $('#myModal').modal('toggle');
+    }
+
+    //设置modal表单确定按钮的onclick事件（点击项目后弹出修改项目模态框）
+    function chanage_confirm_btn_alert(project_id){
+        $("#id_confrim_btn").attr("onclick", "project_alter("+ project_id + ")")
+        $.ajax({
+            url: "{% url 'system:project_alter' %}",
+            method:"get",
+            dataType:"json",
+            data:{
+                id: project_id,
+            },
+            success:function (res){
+                if(res.status == 200){
+                    $.each(res.project, function (name, value){
+                            if(name=="star_mark"){
+                                if(value){
+                                    $("#id_"+name).prop("checked", true)
+                                }else {
+                                    $("#id_"+name).prop("checked", false)
+                                }
+                            }else{
+                                 $("#id_"+name).val(value)
+                            }
+
+                    })
+                }
+                else if(res.status == 400){
+                    alert("获取数据时发生了错误")
+                }
+            }
+            })
+    }
+
+    function star_mark(project_id){
+        $.ajax({
+            url: "{% url 'system:project_star' %}",
+            data: {project_id:project_id},
+            method: "get",
+            dataType: "json",
+            success: function(res){
+                if (res.status==200){
+                    project_list()
+                }
+                else if(res.status==400) {
+                    alert("请求时发生错误")
+                    console.log(res)
+                }
+            }
+
+        })
+}
+
+  </script>
+{% endblock %}

@@ -123,8 +123,10 @@ def user_login(request):
                 user = UserInfo.objects.filter(user=user_name).first()
                 # 保存登录状态
                 request.session["user"] = user.user
+                request.session["id"] = user.id
                 content["status"] = 304
                 content["redirect_url"] = settings.LOGIN_REDIRECT_URL
+                # 重置验证码，让之前的验证码失效
                 request.session["img_code"] = create_random_str(6)
                 return JsonResponse(content)
             else:
@@ -171,6 +173,7 @@ def user_login_sms(request):
                 password = md5("123456")
                 user = UserInfo.objects.create(user=user_name, password=password, mobile_phone=mobile_phone, email="")
                 request.session["user"] = user.user
+                request.session["id"] = user.id
                 content["redirect_url"] = settings.LOGIN_REDIRECT_URL
         else:
             print("验证失败")
