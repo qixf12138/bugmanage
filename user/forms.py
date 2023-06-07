@@ -136,6 +136,11 @@ class LoginModelForm(BootStrapModelsForm):
         user = UserInfo.objects.filter(user=user_name).exists()
         if not user:
             raise ValidationError("用户名不存在！")
+        # try:
+        #     self._validate_unique
+        # except ValidationError:
+        #     pass
+
         return user_name
 
     def clean_password(self):

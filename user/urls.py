@@ -3,11 +3,11 @@ from user import views
 
 urlpatterns = [
     path("", views.index, name="index"),
-    path("sendsms/", views.send_short_msg, name="sendsms"),
-    path("register/", views.user_register, name="register"),
-    path("login/", views.user_login, name="login"),
+    path("sendsms/", views.SendShortMSG.as_view(), name="sendsms"),
+    path("register/", views.UserRegister.as_view(), name="register"),
+    path("login/", views.UserLogin.as_view(), name="login"),
     path("logout/", views.user_logout, name="logout"),
-    path("smslogin/", views.user_login_sms, name="smslogin"),
+    path("smslogin/", views.UserSMSLogin.as_view(), name="smslogin"),
     path("info/", views.user_info, name="userinfo"),
     path("vcode/", views.verif_code, name="verifcode")
 

@@ -155,9 +155,11 @@ CACHES = {
 }
 
 # 登陆后跳转页面
-LOGIN_REDIRECT_URL = "/project/list/"
+LOGIN_REDIRECT_URL = "/system/project/"
 LOGOUT_REDIRECT_URL = "/user/login/"
 
+# 初始用户密码
+INIT_USER_PASSWORD = "123456"
 # 设置bootstrap版本
 CRISPY_TEMPLATE_PACK = 'bootstrap3'
 

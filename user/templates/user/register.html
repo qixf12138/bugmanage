@@ -84,7 +84,7 @@
               dataType: "json",
               success:function (res){
                   console.log(res.error_msg)
-                  if (res.status == 304){
+                  if (res.status == 200){
                     window.location.href=res.redirect_url
                   } else {
                       $.each(res.error_msg,function(name,msg){

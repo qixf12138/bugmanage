@@ -86,7 +86,7 @@
               url: "{% url "user:sendsms" %}",
               method: "get",
               data:{
-                  "req": "register",
+                  "req": "login",
                   "mobile_phone": $("#id_mobile_phone").val(),
               },
               dataType:"json",
@@ -131,10 +131,6 @@
               success:function (res){
                   console.log(res.error_msg)
                   if (res.status == 200){
-                      console.log("success")
-                      location.reload()
-                  }
-                  else if(res.status == 304){
                       window.location.href=res.redirect_url
                   }
                   else {
@@ -155,7 +151,8 @@
               data:$("#user_login_form").serialize(),
               dataType:"json",
               success:function (res){
-                  if(res.status==304){
+                  if(res.status==200){
+                      alert(res.redirect_url)
                       window.location.href=res.redirect_url
                   }
                   else{
