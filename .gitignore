@@ -5,9 +5,8 @@
 .idea/
 
 
-
-# __pycache__/
-__pycache__/
+# python 缓存文件
+ __pycache__/
 
 
 # Django_stuff:

@@ -8,7 +8,7 @@ from utills.projectutills.tools import get_now_data_str
 class ProjectModelForm(BootStrapModelsForm):
     class Meta:
         model = ProjectInfo
-        exclude = ["creator", "use_space", "create_time"]
+        fields = ["name", "color", "describe"]
 
 
 class ProjectCrispyForm(forms.ModelForm):

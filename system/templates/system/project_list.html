@@ -29,6 +29,11 @@
         <div class="panel-body" id="id_panel_body_create">
         </div>
     </div>
+    <div class="panel panel-default" >
+      <div class="panel-heading">我参与的项目</div>
+        <div class="panel-body" id="id_panel_body_join">
+        </div>
+    </div>
     <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
@@ -76,6 +81,9 @@
                     $("#id_panel_body_star").html(project_star)
                     project_create = $(res).filter("#id_panel_body_create")
                     $("#id_panel_body_create").html(project_create)
+                    project_join = $(res).filter("#id_panel_body_join")
+                    $("#id_panel_body_join").html(project_join)
+
                 }else{
                     alert("请求时发生错误")
                     console.log(res)
@@ -122,7 +130,6 @@
                 name : $("#id_name").val(),
                 color: $("#id_color").val(),
                 describe: $("#id_describe").val(),
-                star_mark: $("#id_star_mark").is(":checked"),
                 csrfmiddlewaretoken: $("#id_project_form").children(0).val(),
             },
             success:function (res){
@@ -130,7 +137,7 @@
                     success_request($('#myModal'))
                 }
                 else if(res.status==400){
-                    if(re.error_msg){
+                    if(res.error_msg){
                         $.each(res.error_msg,function (name,msg){
                           $("#id_"+name).next().text(msg)
                         })
@@ -146,13 +153,12 @@
     //清空表单信息
     function clear_modal_form(){
         $(".span_project_error_msg").text("")
-        $("#id_project_form").reset()
+        $("#id_project_form").trigger("reset")
     }
 
     //设置modal表单确定按钮的onclick事件（点击新建按钮）
     function chanage_confirm_btn_add(){
         clear_modal_form()
-        $("#id_project_form").trigger("reset")
         $("#id_confrim_btn").attr("onclick", "project_add()");
         $('#myModal').modal('toggle');
     }
@@ -197,6 +203,7 @@
             dataType: "json",
             success: function(res){
                 if (res.status==200){
+                    console.log("success")
                     project_list()
                 }
                 else if(res.status==400) {
