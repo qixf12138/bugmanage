@@ -1,0 +1,77 @@
+<div class="panel-body" id="id_panel_body_star">
+  <div class="row">
+    {% for project in star %}
+      {% if project.star_mark == True %}
+        <div class="col-xs-6 col-sm-2">
+          <div class="row desc" style="background-color: {{ project.get_color_display }};" onclick="chanage_confirm_btn_alert({{ project.id}})" data-toggle="modal" data-target="#myModal">
+            <span class="container" style="text-align: center;">
+              {{ project.describe }}
+            </span>
+          </div>
+          <div class="row title">
+            {% if project.star_mark == True  %}
+            <i class="fa-solid fa-star fa-fw" style="color: orange" onclick="star_mark({{ project.id }})"></i>
+            {% else %}
+            <i class="fa-regular fa-star fa-fw"  onclick="star_mark({{ project.id }})"></i>
+            {% endif %}
+            {{ project.name }}
+            <span>
+              <i class="fa-solid fa-person fa-fw" ></i>
+              {{ project.user_num }}
+            </span>
+          </div>
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+</div>
+<div class="panel-body" id="id_panel_body_create">
+  <div class="row">
+    {% for project in creator %}
+    <div class="col-xs-6 col-sm-2">
+      <div class="row desc" style="background-color: {{project.get_color_display}};"  onclick="chanage_confirm_btn_alert({{ project.id}})" data-toggle="modal" data-target="#myModal"  >
+        <span class="container" style="text-align: center;">
+          {{ project.describe }}
+        </span>
+      </div>
+      <div class="row title">
+        {% if project.star_mark == True  %}
+        <i class="fa-solid fa-star fa-fw" style="color: orange" onclick="star_mark({{ project.id }})"></i>
+        {% else %}
+        <i class="fa-regular fa-star fa-fw"  onclick="star_mark({{ project.id }})"></i>
+        {% endif %}
+      {{ project.name }}
+        <span>
+          <i class="fa-solid fa-person fa-fw" ></i>
+          {{ project.user_num }}
+        </span>
+      </div>
+    </div>
+    {% endfor %}
+    </div>
+</div>
+<div class="panel-body" id="id_panel_body_join">
+  <div class="row">
+    {% for project in join %}
+    <div class="col-xs-6 col-sm-2">
+      <div class="row desc" style="background-color: {{project.get_color_display}};"  onclick="chanage_confirm_btn_alert({{ project.id}})" data-toggle="modal" data-target="#myModal"  >
+        <span class="container" style="text-align: center;">
+          {{ project.describe }}
+        </span>
+      </div>
+      <div class="row title">
+        {% if project.star_mark == True  %}
+        <i class="fa-solid fa-star fa-fw" style="color: orange" onclick="star_mark({{ project.id }})"></i>
+        {% else %}
+        <i class="fa-regular fa-star fa-fw"  onclick="star_mark({{ project.id }})"></i>
+        {% endif %}
+      {{ project.name }}
+        <span>
+          <i class="fa-solid fa-person fa-fw" ></i>
+          {{ project.user_num }}
+        </span>
+      </div>
+    </div>
+    {% endfor %}
+    </div>
+</div>

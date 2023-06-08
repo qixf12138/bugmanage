@@ -1,8 +1,12 @@
 from django.urls import path
-from project import views
+from system.views import ProjectList, ProjectManage, ProjectAdd, ProjectAlter, ProjectStarMark
 
+# /system/
 urlpatterns = [
-    path("list/", views.project_list, name="mylist"),
-    path("alter/", views.project_alter, name="alter"),
-    path("star/", views.project_star_mark, name="star"),
+    path("", ProjectManage.as_view(), name="index"),
+    path("list/", ProjectList.as_view(), name="list"),
+    path("add/", ProjectAdd.as_view(), name="add"),
+    path("alter/", ProjectAlter.as_view(), name="alter"),
+    path("star/", ProjectStarMark.as_view(), name="star"),
+
 ]

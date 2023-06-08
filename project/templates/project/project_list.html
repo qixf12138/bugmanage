@@ -98,7 +98,7 @@
     //获取项目列表
     function project_list(){
         $.ajax({
-            url: "{% url 'system:project_list' %}",
+            url: "{% url 'project:list' %}",
             method: "get",
             dataType: "html",
             success: function(res){
@@ -128,7 +128,7 @@
     //新建项目
     function project_add(){
         $.ajax({
-            url:"{% url 'system:project_add' %}",
+            url:"{% url 'project:add' %}",
             method:"post",
             data:$("#id_project_form").serialize(),
             dataType:"json",
@@ -148,7 +148,7 @@
     //修改项目
     function project_alter(project_id){
         $.ajax({
-            url: "{% url 'system:project_alter' %}",
+            url: "{% url 'project:alter' %}",
             method: "post",
             dataType: "json",
             data: {
@@ -193,7 +193,7 @@
     function chanage_confirm_btn_alert(project_id){
         $("#id_confrim_btn").attr("onclick", "project_alter("+ project_id + ")")
         $.ajax({
-            url: "{% url 'system:project_alter' %}",
+            url: "{% url 'project:alter' %}",
             method:"get",
             dataType:"json",
             data:{
@@ -223,7 +223,7 @@
 
     function star_mark(project_id){
         $.ajax({
-            url: "{% url 'system:project_star' %}",
+            url: "{% url 'project:star' %}",
             data: {project_id:project_id},
             method: "get",
             dataType: "json",

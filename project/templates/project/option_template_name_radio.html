@@ -1,0 +1,12 @@
+{% if widget.wrap_label %}
+  <label{% if widget.attrs.id %} for="{{ widget.attrs.id }}"{% endif %}>
+{% endif %}
+{% include "django/forms/widgets/input.html" %}
+{% if widget.wrap_label %}
+<span class="cycle" style="background-color: {{ widget.label }}"></span>
+  </label>
+{% endif %}
+
+
+
+
