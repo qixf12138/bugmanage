@@ -1,4 +1,5 @@
-{% extends "layout/base.html" %}\
+{% extends "layout/base.html" %}
+{% load project_inclusion_tag %}
 {% block appindex %}{% url "proejct:index" %}{% endblock %}
 {% block navbar %}
   <nav class="navbar navbar-default">
@@ -20,20 +21,25 @@
               <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
                  aria-expanded="false">项目 <span class="caret"></span></a>
               <ul class="dropdown-menu">
-                <li><a href="#">{{ user.mobile_phone }}</a></li>
-                <li><a href="#">Another action</a></li>
-                <li><a href="#">Something else here</a></li>
-                <li role="separator" class="divider"></li>
-                <li><a href="#">Separated link</a></li>
-                <li role="separator" class="divider"></li>
-                <li><a href="#">One more separated link</a></li>
+                {% display_project request %}
               </ul>
             </li>
+            {% if request.userinfo.project %}
+                <li {% if request.now_tag == "overview" %}class="active"{% endif %}><a href="{% url 'project:operate:overview' request.userinfo.project.id %}">概览</a></li>
+                <li {% if request.now_tag == "issue" %}class="active"{% endif %}><a href="{% url 'project:operate:issue' request.userinfo.project.id %}">问题</a></li>
+                <li {% if request.now_tag == "analyze" %}class="active"{% endif %}><a href="{% url 'project:operate:analyze' request.userinfo.project.id %}">统计</a></li>
+                <li {% if request.now_tag == "file" %}class="active"{% endif %}><a href="{% url 'project:operate:file' request.userinfo.project.id %}">文件</a></li>
+                <li {% if request.now_tag == "wiki" %}class="active"{% endif %}><a href="{% url 'project:operate:wiki' request.userinfo.project.id %}">wiki</a></li>
+                <li {% if request.now_tag == "settings" %}class="active"{% endif %}><a href="{% url 'project:operate:settings' request.userinfo.project.id %}">设置</a></li>
+            {% endif %}
+            {% block project_navbar %}
+            {% endblock %}
           </ul>
           <ul class="nav navbar-nav navbar-right">
-            <li><a href="{% url "user:login" %}">回到登录</a></li>
-            <li><a href="{% url "user:login" %}">登录</a></li>
-            <li><a href="{% url "user:register" %}">注册</a></li>
+            {% if not user %}
+              <li><a href="{% url "user:login" %}">登录</a></li>
+              <li><a href="{% url "user:register" %}">注册</a></li>
+            {% endif %}
             <li class="dropdown">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
                  aria-expanded="false">{{ user.user }} <span class="caret"></span></a>
@@ -48,5 +54,7 @@
           </ul>
         </div><!-- /.navbar-collapse -->
       </div><!-- /.container-fluid -->
-    </nav>
+  </nav>
+{% endblock %}
+{% block content %}
 {% endblock %}

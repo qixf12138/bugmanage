@@ -1,6 +1,6 @@
 import random
 import datetime
-
+import inspect
 from django_redis import get_redis_connection
 
 
@@ -43,3 +43,18 @@ def get_now_data_str(str_format="%Y-%m-%d %H:%M:%S"):
     now_time_str = now_time.strftime(str_format)
     return now_time_str
 
+
+# 获取一个项目所有的类名
+def get_class_names(module):
+    # 创建一个空列表，用来存储类名
+    class_names = []
+    # 遍历模块中的所有对象
+    for name in dir(module):
+        # 获取对象的引用
+        obj = getattr(module, name)
+        # 判断对象是否是类
+        if inspect.isclass(obj):
+            # 获取类的名称，并添加到列表中
+            class_names.append(obj.__name__)
+    # 返回列表
+    return class_names

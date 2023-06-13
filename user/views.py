@@ -128,12 +128,12 @@ class UserRegister(BaseJsonView):
     """
     用户注册
     """
-    templates_name = "user/register.html"
+    template_name = "user/register.html"
 
     def get(self, request):
         if request.method == "GET":
             form = RegisterModelForm()
-            return render(request, UserRegister.template_name)
+            return render(request, UserRegister.template_name, {"form": form})
 
     def post(self, request):
         form = RegisterModelForm(data=request.POST)

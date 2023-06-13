@@ -2,9 +2,10 @@
 from django.db.models import F
 from django.views import View
 from django.forms import model_to_dict
-from django.shortcuts import render
+from django.shortcuts import render, HttpResponse
 
 from bugmanage.views import BaseJsonView
+from project.utills.limit_role import project_limt
 from user.models import UserInfo
 from project.forms import ProjectModelForm
 from project.models import ProjectUser, ProjectInfo
@@ -14,7 +15,7 @@ class ProjectManage(View):
     """
     get():返回modal模态框的表单，返回登录的用户的信息
     """
-    templates_name = "system/project_list.html"
+    template_name = "project/project_list.html"
 
     def get(self, request):
         form = ProjectModelForm()
@@ -25,14 +26,14 @@ class ProjectManage(View):
             "form": form,
             "user": user,
         }
-        return render(request, ProjectManage.templates_name, content)
+        return render(request, ProjectManage.template_name, content)
 
 
 class ProjectList(View):
     """
     get()返回并渲染 星标项目 （ProjectUser）和 我创建的项目 （ProjectInfo） 两个模板
     """
-    templates_name = "system/project_list_panel_card.html"
+    template_name = "project/project_list_panel_card.html"
 
     def get(self, request):
         user_id = request.session.get("id")
@@ -44,7 +45,7 @@ class ProjectList(View):
             if project.star_mark:
                 content["star"].append(project.project)
             else:
-                content["join"].append(project.project)
+                content["join"].append(project)
 
         for project in creator_projects:
             project.user_num = ProjectUser.objects.filter(project_id=project.id).count()
@@ -56,7 +57,7 @@ class ProjectList(View):
         #         "join_projects": join_projects,
         #         "creator_projects": creator_projects,
         # }
-        return render(request, ProjectList.templates_name, content)
+        return render(request, ProjectList.template_name, content)
 
 
 class ProjectAdd(BaseJsonView):
@@ -68,10 +69,14 @@ class ProjectAdd(BaseJsonView):
     def post(self, request):
         content = {}
         form = ProjectModelForm(data=request.POST)
+        print(request.POST)
         if form.is_valid():
-            # 获取session内的用户名，创建时自动填写创建者、创建时间（暂时没有写使用空间，后续考虑专门编写一个方法）
-            user = request.session.get("id")
-            form.instance.creator_id = user
+            # 获取request内的用户名，创建时自动填写创建者、创建时间（暂时没有写使用空间，后续考虑专门编写一个方法）
+            form.instance.creator_id = request.userinfo.user.id
+            # 增加项目创建上限验证
+            is_limit_msg = project_limt(request, form)
+            if is_limit_msg:
+                return self.error_response_data(is_limit_msg)
             form.save()
             # project = form.save()
             # star_mark = form.instance.star_mark
@@ -106,7 +111,6 @@ class ProjectAlter(BaseJsonView):
             return self.success_response_data(content)
         else:
             return self.error_response("项目不存在！")
-
 
     def post(self, request):
         content = {}
@@ -150,10 +154,11 @@ class ProjectStarMark(BaseJsonView):
                                                         creator=user).update(star_mark=~F('star_mark'))
             # 如果返回0,则不是项目的创建者，去项目参与关系表里找
             if not create_project:
-                join_project = ProjectUser.objects.filter(project_id__in=project_id,
+                join_project = ProjectUser.objects.filter(project_id__in=(project_id,),
                                                           user=user).update(star_mark=~F('star_mark'))
                 if not join_project:
                     return self.error_response("未找到相关项目信息")
             return self.success_response()
         return self.error_response("用户无效")
+
 

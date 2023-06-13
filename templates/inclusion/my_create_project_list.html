@@ -1,0 +1,15 @@
+<li><a href="#">自定义信息</a></li>
+<li><a href="#">Another action</a></li>
+<li><a href="#">Something else here</a></li>
+<li role="separator" class="divider"></li>
+{% for project in creator %}
+<li>
+  <a href="{% url "project:operate:overview" project.id %}">
+    {{ project.name }}
+  </a>
+</li>
+{% endfor %}
+<li role="separator" class="divider"></li>
+{% for project in join %}
+<li><a href="{% url "project:operate:overview" project.project.id %}">{{ project.project.name }}</a></li>
+{% endfor %}

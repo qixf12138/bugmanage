@@ -1,7 +1,8 @@
 from django.urls import path
 # from system.views import ProjectList, ProjectManage, ProjectAdd, ProjectAlter, ProjectStarMark
 
-# /system/
+app_name = "system"
+
 urlpatterns = [
     # path("project/", ProjectManage.as_view(), name="project"),
     # path("project/list/", ProjectList.as_view(), name="project_list"),

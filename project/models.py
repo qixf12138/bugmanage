@@ -5,13 +5,13 @@ from user.models import UserInfo
 # 项目类
 class ProjectInfo(models.Model):
     COLOR_CHOICES = (
-        (1, "#56b8eb"),
-        (2, "#f28033"),
-        (3, "#ebc656"),
-        (4, "#a2d148"),
-        (5, "#20bfa4"),
-        (6, "#7461c2"),
-        (7, "#20bfa3"),
+        (0, "#56b8eb"),
+        (1, "#f28033"),
+        (2, "#ebc656"),
+        (3, "#a2d148"),
+        (4, "#20bfa4"),
+        (5, "#7461c2"),
+        (6, "#20bfa3"),
     )
     name = models.CharField(verbose_name="项目名称",  max_length=32)
     color = models.SmallIntegerField(verbose_name="颜色", choices=COLOR_CHOICES, default=1)
@@ -57,3 +57,18 @@ class PricePolicy(models.Model):
     project_capacity = models.PositiveIntegerField(verbose_name="项目空间")
     file_capacity = models.PositiveIntegerField(verbose_name="单文件上限")
     create_time = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+
+
+class ProjectWikiInfo(models.Model):
+    title = models.CharField(verbose_name="标题", max_length=64)
+    content = models.CharField(verbose_name="正文", max_length=512)
+    project = models.ForeignKey(verbose_name="所属项目", to="ProjectInfo",
+                                on_delete=models.CASCADE, null=False,
+                                blank="True")
+    parent = models.ForeignKey(verbose_name="上级标题", to="ProjectWikiInfo",
+                               related_name="parent_title", on_delete=models.CASCADE,
+                               null=True, blank=True)
+
+    def __str__(self):
+        return self.title
+    

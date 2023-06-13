@@ -51,7 +51,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'utills.middleware.vaildlogin.LoginVerification',
+    'utills.middleware.authvaild.LoginVerification',
+    'utills.middleware.authvaild.ProjectManageNavbar',
 ]
 
 ROOT_URLCONF = 'bugmanage.urls'
@@ -155,7 +156,7 @@ CACHES = {
 }
 
 # 登陆后跳转页面
-LOGIN_REDIRECT_URL = "/system/project/"
+LOGIN_REDIRECT_URL = "/project/"
 LOGOUT_REDIRECT_URL = "/user/login/"
 
 # 初始用户密码

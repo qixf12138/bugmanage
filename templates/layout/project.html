@@ -1,0 +1,12 @@
+{% extends "layout/manage.html" %}
+{% block project_navbar%}
+  <li {% if request.now_tag == "overview" %}class="active"{% endif %}><a href="{% url 'project:operate:overview' request.userinfo.project.id %}">概览</a></li>
+  <li {% if request.now_tag == "issue" %}class="active"{% endif %}><a href="{% url 'project:operate:issue' request.userinfo.project.id %}">问题</a></li>
+  <li {% if request.now_tag == "analyze" %}class="active"{% endif %}><a href="{% url 'project:operate:analyze' request.userinfo.project.id %}">统计</a></li>
+  <li {% if request.now_tag == "file" %}class="active"{% endif %}><a href="{% url 'project:operate:file' request.userinfo.project.id %}">文件</a></li>
+  <li {% if request.now_tag == "wiki" %}class="active"{% endif %}><a href="{% url 'project:operate:wiki' request.userinfo.project.id %}">wiki</a></li>
+  <li {% if request.now_tag == "settings" %}class="active"{% endif %}><a href="{% url 'project:operate:settings' request.userinfo.project.id %}">设置</a></li>
+{% endblock %}
+
+{% block content %}
+{% endblock %}

@@ -1,0 +1,110 @@
+{% extends "layout/manage.html" %}
+{% block css %}
+  <style>
+  a {
+      text-decoration: none;
+  }
+  button a {
+
+      color:#FFFFFF;
+  }
+  </style>
+{% endblock %}
+{% block content %}
+  {% block button %}
+    <div style="float: right">
+  <button type="button" class="btn btn-btn btn-success" >
+    <a href="{% url 'project:operate:wiki_add' request.userinfo.project.id%}">新建</a>
+  </button>
+  {% if wiki.id %}
+  <button type="button" class="btn btn-btn btn-info" >
+    <a href="{% url 'project:operate:wiki_alter' request.userinfo.project.id wiki.id %}">修改</a>
+  </button>
+  <button type="button" class="btn btn-btn btn-danger" >
+    <a href="{% url 'project:operate:wiki_delete' request.userinfo.project.id wiki.id %}">删除</a>
+  </button>
+  {% endif %}
+</div>
+  {% endblock %}
+<div class="row" style="clear:right">
+  <div class="col-md-9 col-md-push-3">
+    {% block wiki_content %}
+      <div class="panel panel-default" style="margin-top: 20px">
+        <div class="panel-heading">wiki</div>
+        {{ wiki.content}}
+      </div>
+    {% endblock %}
+  </div>
+  <div class="col-md-3 col-md-pull-9">
+    <div class="panel panel-default" style="margin-top: 20px">
+      <div class="panel-heading">目录</div>
+      <ul class="" id="id_ul_project_wiki_title">
+        {% for wiki in wikis %}
+          <li>{{ wiki.title }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+{% block js %}
+  <script>
+    $(function (){
+        generate_wiki_title_html()
+    })
+
+    // 定义一个递归的函数，接受一个标题数组和一个父标题id作为参数
+    function generate_wiki_title(titles, parent_id) {
+        // 创建一个空的HTML字符串
+        var html = ""
+
+        $.each(titles,function (index,wiki){
+            // 如果当前标题的父标题id等于参数中的父标题id
+            if (wiki.parent_id == parent_id) {
+                html += "<li><a href='{% url "project:operate:wiki" project_id=request.userinfo.project.id%}" + wiki.id +"'>" + wiki.title + "</a></li>"
+                html += generate_wiki_title(titles, wiki.id)
+        }
+        })
+            if(html  != ""){
+               return  "<ul>" + html + "</ul>"
+            }else {
+                return ""
+            }
+    }
+    // 获取相应的wiki数据
+    function generate_wiki_content(wiki_id){
+
+    }
+    // 获取并生成wiki标题和正文
+    function generate_wiki_title_html(){
+        $.ajax({
+            url:"{% url 'project:operate:wiki_title' request.userinfo.project.id %}",
+            method:"get",
+            dataType:"json",
+            success:function (res){
+                if(res.status==200){
+                    var wiki_parent=[]
+                    var wki_childs=[]
+                    $.each(res.wiki,function (index, wiki){
+                        if(wiki.parent_id){
+                           wki_childs.push(wiki)
+                        }
+                        else {
+                           wiki_parent.push(wiki)
+                        }
+                    })
+                    var html = ""
+                    $.each(wiki_parent, function (index, wiki){
+                        html += "<li><a href='{% url "project:operate:wiki" project_id=request.userinfo.project.id %}" + wiki.id +"'>" + wiki.title + "</a></li>";
+                        html += generate_wiki_title(wki_childs, wiki.id)
+                    })
+                    $("#id_ul_project_wiki_title").html(html)
+                }
+            }
+        })
+    }
+
+
+  </script>
+{% endblock %}
