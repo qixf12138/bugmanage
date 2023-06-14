@@ -8,34 +8,29 @@
 
       color:#FFFFFF;
   }
+  .panel {
+      height: 800px;
+  }
   </style>
 {% endblock %}
 {% block content %}
-  {% block button %}
-    <div style="float: right">
+{% block button %}
+  {% if wiki.id %}
+<div style="float: right">
   <button type="button" class="btn btn-btn btn-success" >
     <a href="{% url 'project:operate:wiki_add' request.userinfo.project.id%}">新建</a>
   </button>
-  {% if wiki.id %}
   <button type="button" class="btn btn-btn btn-info" >
-    <a href="{% url 'project:operate:wiki_alter' request.userinfo.project.id wiki.id %}">修改</a>
+    <a href="{% url 'project:operate:wiki_alter' request.userinfo.project.id %}?wiki_id={{ wiki.id }}">修改</a>
   </button>
   <button type="button" class="btn btn-btn btn-danger" >
-    <a href="{% url 'project:operate:wiki_delete' request.userinfo.project.id wiki.id %}">删除</a>
+    <a href="{% url 'project:operate:wiki_delete' request.userinfo.project.id%}?wiki_id={{ wiki.id }}">删除</a>
   </button>
   {% endif %}
 </div>
-  {% endblock %}
+{% endblock %}
 <div class="row" style="clear:right">
-  <div class="col-md-9 col-md-push-3">
-    {% block wiki_content %}
-      <div class="panel panel-default" style="margin-top: 20px">
-        <div class="panel-heading">wiki</div>
-        {{ wiki.content}}
-      </div>
-    {% endblock %}
-  </div>
-  <div class="col-md-3 col-md-pull-9">
+  <div class="col-md-3 col-md-9">
     <div class="panel panel-default" style="margin-top: 20px">
       <div class="panel-heading">目录</div>
       <ul class="" id="id_ul_project_wiki_title">
@@ -44,7 +39,21 @@
         {% endfor %}
       </ul>
     </div>
-
+  </div>
+  <div class="col-md-9 col-md-9">
+    {% block wiki_content %}
+      <div class="panel panel-default" style="margin-top: 20px">
+        <div class="panel-heading">wiki</div>
+        {% if wiki %}
+        {{ wiki.content}}
+        {% else %}
+          <div style="text-align: center; margin-top: 30px;" >
+            <h4>{{ request.userinfo.project.name }}wiki文档</h4>
+            <a href="{% url 'project:operate:wiki_add' request.userinfo.project.id%}">新建wiki</a>
+          </div>
+        {% endif %}
+      </div>
+    {% endblock %}
   </div>
 </div>
 {% endblock %}
@@ -62,7 +71,7 @@
         $.each(titles,function (index,wiki){
             // 如果当前标题的父标题id等于参数中的父标题id
             if (wiki.parent_id == parent_id) {
-                html += "<li><a href='{% url "project:operate:wiki" project_id=request.userinfo.project.id%}" + wiki.id +"'>" + wiki.title + "</a></li>"
+                html += "<li><a href='{% url "project:operate:wiki" project_id=request.userinfo.project.id%}?wiki_id=" + wiki.id +"'>" + wiki.title + "</a></li>"
                 html += generate_wiki_title(titles, wiki.id)
         }
         })
@@ -96,7 +105,7 @@
                     })
                     var html = ""
                     $.each(wiki_parent, function (index, wiki){
-                        html += "<li><a href='{% url "project:operate:wiki" project_id=request.userinfo.project.id %}" + wiki.id +"'>" + wiki.title + "</a></li>";
+                        html += "<li><a href='{% url "project:operate:wiki" project_id=request.userinfo.project.id %}?wiki_id=" + wiki.id +"'>" + wiki.title + "</a></li>";
                         html += generate_wiki_title(wki_childs, wiki.id)
                     })
                     $("#id_ul_project_wiki_title").html(html)
