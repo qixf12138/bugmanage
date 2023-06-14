@@ -34,7 +34,7 @@ class ProjectCrispyForm(forms.ModelForm):
 class ProjectWikiModelForm(BootStrapModelsForm):
     class Meta:
         model = ProjectWikiInfo
-        exclude = ["project"]
+        exclude = ["project", "depth"]
 
     content = forms.CharField(
         label="正文",

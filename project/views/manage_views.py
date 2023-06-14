@@ -48,6 +48,7 @@ class ProjectWiki(BaseJsonView):
     Method
     --------------
     valid_wiki_id（）验证wiki_id格式是否正确，如果正确并存在，返回wiki
+    add_wiki_title_depth() 如果有父类ID，给传入的form.instance添加depth值（parent.depth+1），否则使用默认值1
     get_redirect_url（） 生成project_id wiki主页面或者wiki详情页面的url。通常用于添加，修改，删除后的跳转
     get() 获取wiki的主页信息或者是wiki的详情
     """
@@ -67,6 +68,12 @@ class ProjectWiki(BaseJsonView):
         if wiki_id:
             return "/project/"+str(project_id)+"/"+"wiki/?wiki_id=" + str(wiki_id)
         return "/project/"+str(project_id)+"/"+"wiki/"
+
+    @staticmethod
+    def add_wiki_title_depth(form):
+        parent = form.cleaned_data.get("parent")
+        if parent:
+            form.instance.depth = parent.depth + 1
 
     def get(self, request, project_id):
         context = {}
@@ -101,6 +108,8 @@ class ProjectWikiAdd(View):
         form = ProjectWikiModelForm(data=request.POST, request=request)
         if form.is_valid():
             form.instance.project = project
+            # 给form的instance添加depth值
+            ProjectWiki.add_wiki_title_depth(form)
             form.save()
         else:
             print(form.errors)
@@ -138,6 +147,8 @@ class ProjectWikiAlter(BaseJsonView):
             return self.error_response("请求格式不正确")
         form = ProjectWikiModelForm(data=request.POST, instance=wiki, request=request)
         if form.is_valid():
+            # 给form的instance添加depth值
+            ProjectWiki.add_wiki_title_depth(form)
             form.save()
             return redirect(ProjectWiki.get_redirect_url(project_id, wiki.id))
         return self.error_response("数据验证失败")

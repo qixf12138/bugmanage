@@ -68,6 +68,7 @@ class ProjectWikiInfo(models.Model):
     parent = models.ForeignKey(verbose_name="上级标题", to="ProjectWikiInfo",
                                related_name="parent_title", on_delete=models.CASCADE,
                                null=True, blank=True)
+    depth = models.SmallIntegerField(verbose_name="标题等级", default=1)
 
     def __str__(self):
         return self.title
