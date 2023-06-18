@@ -4,7 +4,7 @@ from crispy_forms.helper import FormHelper
 from project.models import ProjectInfo, ProjectWikiInfo
 from project.widgets import ColorRadioSelect
 from utills.projectutills.forms import BootStrapModelsForm
-from utills.projectutills.tools import get_now_data_str
+from mdeditor.widgets import MDEditorWidget
 
 
 class ProjectModelForm(BootStrapModelsForm):
@@ -32,13 +32,16 @@ class ProjectCrispyForm(forms.ModelForm):
 
 
 class ProjectWikiModelForm(BootStrapModelsForm):
+    bootstarp_class_exclue = ["content"]
+
     class Meta:
         model = ProjectWikiInfo
         exclude = ["project", "depth"]
 
     content = forms.CharField(
         label="正文",
-        widget=forms.Textarea()
+        # widget=MDEditorWidget()
+        widget=forms.Textarea
     )
 
     def __init__(self, request, *args, **kargs):

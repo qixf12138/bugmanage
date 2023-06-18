@@ -9,6 +9,7 @@ from project.utills.limit_role import project_limt
 from user.models import UserInfo
 from project.forms import ProjectModelForm
 from project.models import ProjectUser, ProjectInfo
+from utills.tencent.cos import COSBucket
 
 
 class ProjectManage(View):
@@ -71,12 +72,15 @@ class ProjectAdd(BaseJsonView):
         form = ProjectModelForm(data=request.POST)
         print(request.POST)
         if form.is_valid():
-            # 获取request内的用户名，创建时自动填写创建者、创建时间（暂时没有写使用空间，后续考虑专门编写一个方法）
-            form.instance.creator_id = request.userinfo.user.id
             # 增加项目创建上限验证
             is_limit_msg = project_limt(request, form)
             if is_limit_msg:
                 return self.error_response_data(is_limit_msg)
+            cos = COSBucket()
+            bucket_name = cos.create_bucket()
+            # 获取request内的用户名，创建时自动填写创建者、创建时间
+            form.instance.creator_id = request.userinfo.user.id
+            form.instance.bucket = bucket_name
             form.save()
             # project = form.save()
             # star_mark = form.instance.star_mark

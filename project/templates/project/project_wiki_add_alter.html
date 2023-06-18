@@ -1,0 +1,43 @@
+{% extends "project/project_wiki.html" %}
+{% load static %}
+{% block css2 %}
+{% endblock %}
+{% block button %}
+{% endblock %}
+{% block wiki_content %}
+  <form method="post">
+    {% csrf_token %}
+    {% for field in form %}
+      {% if field.name == "content" %}
+        <div id="mdeditor">
+        {{ field }}
+        </div>
+      {% else %}
+      {{ field }}
+      {% endif %}
+    {% endfor %}
+    <button type="submit">提交</button>
+  </form>
+{% endblock %}
+{% block js %}
+  {{ block.super }}
+  <script>
+      $(function (){
+          initEditorMd()
+      })
+      function initEditorMd(){
+        editormd("mdeditor",{
+            placeholder: "请输入内容",
+            height: 500,
+            path: "{% static 'lib/' %}",
+            imageUpload:true,
+            imageFormats:["jpg", "jpeg", "png", "gif", "bmp"],
+            imageUploadURL:"{% url "project:operate:wiki_upload" request.userinfo.project.id %}"
+        })
+    }
+  </script>
+{% endblock %}
+{% block js2 %}
+{% endblock %}
+
+

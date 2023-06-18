@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="{% static "css/bootstrap.min.css" %}">
     <link rel="stylesheet" href="{% static "css/fontawesome.min.css" %}">
     {% block css %}{% endblock %}
+    {% block css2 %}{% endblock %}
+    <script src="{% static "js/jquery.js" %}"></script>
   </head>
   <body>
   {% block navbar %}
@@ -69,12 +71,13 @@
   {% endblock %}
     {% block content %}
     {% endblock %}
-    <script src="{% static "js/jquery.js" %}"></script>
     <script src="{% static "js/bootstrap.min.js" %}"></script>
-    <script src="{% static 'js/fontawesome.min.js' %}"></script>
+{#    <script src="{% static 'js/fontawesome.min.js' %}"></script>#}
     <script src="{% static 'js/solid.min.js' %}"></script>
     <script src="{% static 'js/regular.min.js' %}"></script>
     {% block js %}
+    {% endblock %}
+    {% block js2 %}
     {% endblock %}
   </body>
 </html>

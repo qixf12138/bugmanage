@@ -1,12 +1,16 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from django.views import View
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import DeleteView
 
 from bugmanage.views import BaseJsonView
 from project.forms import ProjectWikiModelForm
 from project.models import ProjectWikiInfo, ProjectInfo
 from utills.datavalid.datavalid import id_number_vaild
+from utills.projectutills.randomobj import create_random_str
+from utills.tencent.cos import COSBucket
+from utills.tencent.cos_sts import get_credential_demo
 
 
 class ProjectOverView(View):
@@ -28,6 +32,7 @@ class ProjectAnalyze(View):
     template_name = "project/project_analyz.html"
 
     def get(self, request, project_id):
+
         return render(request, ProjectAnalyze.template_name)
 
 
@@ -36,6 +41,11 @@ class ProjectFile(View):
 
     def get(self, request, project_id):
         return render(request, ProjectFile.template_name)
+
+
+class ProjectUploadFile(BaseJsonView):
+    def get(self, request, project_id):
+        return JsonResponse(get_credential_demo())
 
 
 class ProjectWiki(BaseJsonView):
@@ -77,8 +87,10 @@ class ProjectWiki(BaseJsonView):
 
     def get(self, request, project_id):
         context = {}
-        if not ProjectWiki.valid_wiki_id(request, context, project_id):
-            pass
+        wiki = ProjectWiki.valid_wiki_id(request, context, project_id)
+        if not wiki:
+            form = ProjectWikiModelForm(request=request, data=wiki)
+            context["form"] = form
         return render(request, ProjectWiki.template_name, context)
 
 
@@ -95,10 +107,11 @@ class ProjectWikiAdd(View):
     post（）处理添加wiki的请求
     """
 
-    template_name = "project/project_wiki_add.html"
+    template_name = "project/project_wiki_add_alter.html"
 
     def get(self, request, project_id):
         form = ProjectWikiModelForm(request=request)
+        print(form)
         return render(request, ProjectWikiAdd.template_name, {"form": form})
 
     def post(self, request, project_id):
@@ -111,9 +124,6 @@ class ProjectWikiAdd(View):
             # 给form的instance添加depth值
             ProjectWiki.add_wiki_title_depth(form)
             form.save()
-        else:
-            print(form.errors)
-
         return redirect(ProjectWiki.get_redirect_url(project_id))
 
 
@@ -129,7 +139,8 @@ class ProjectWikiAlter(BaseJsonView):
     get() 获取添加wiki的修改表单页面，以及返回需要修改wiki的原本信息
     post（）处理修改wiki的请求
     """
-    template_name = "project/project_wiki_alter.html"
+    # ProjectWikiAdd.template_name : "project/project_wiki_add_alter.html"
+    template_name = ProjectWikiAdd.template_name
 
     def get(self, request, project_id):
         context = {}
@@ -166,6 +177,46 @@ def project_wiki_delete(request, project_id):
     else:
         BaseJsonView.error_response("请求格式错误！")
     return render(request, ProjectWiki.template_name)
+
+
+# 上传图片
+@csrf_exempt
+def project_wili_upload(request, project_id):
+    # 初始化mdeditor的返回值
+    result = {
+        'success': 0,
+        'message': None,
+        "url": None,
+    }
+
+    # 判断项目是否存在
+    project = ProjectInfo.objects.filter(id=project_id).first()
+    if not project:
+        return JsonResponse(result)
+
+    # 判断图片对象是否存在
+    img = request.FILES.get("editormd-image-file")
+    print(request.FILES)
+    if not img:
+        return JsonResponse(result)
+
+    # 实例化腾讯云存储对象
+    cos = COSBucket()
+    # 拼接出桶名称
+    bucket = project.bucket
+    # 获取扩展名，生成随机字符串作为key值
+    ext = img.name.rsplit(".")[-1]
+    key = f"{create_random_str(16)}.{ext}"
+
+    # 上传图片到腾讯云存储对象桶
+    cos.upload_file_by_buffer(bucket, key, img)
+    # 拼接出上传后的图片url
+    success_url = cos.scheme + "://" + bucket + ".cos." + cos.region + ".myqcloud.com/" + key
+
+    # 设置成功的表示，返回腾讯云存储对象图片url
+    result['success'] = 1
+    result['url'] = success_url
+    return JsonResponse(result)
 
 
 class ProjectWikiTitle(BaseJsonView):

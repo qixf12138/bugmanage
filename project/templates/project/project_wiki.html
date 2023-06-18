@@ -1,4 +1,5 @@
 {% extends "layout/manage.html" %}
+{% load static %}
 {% block css %}
   <style>
   a {
@@ -12,6 +13,10 @@
       height: 800px;
   }
   </style>
+  <link rel="stylesheet" href="{% static 'css/editormd.min.css' %}" />
+{% endblock %}
+{% block css2 %}
+  <link rel="stylesheet" href="{% static "css/editormd.preview.min.css" %}">
 {% endblock %}
 {% block content %}
 {% block button %}
@@ -34,9 +39,6 @@
     <div class="panel panel-default" style="margin-top: 20px">
       <div class="panel-heading">目录</div>
       <ul class="" id="id_ul_project_wiki_title">
-        {% for wiki in wikis %}
-          <li>{{ wiki.title }}</li>
-        {% endfor %}
       </ul>
     </div>
   </div>
@@ -45,7 +47,11 @@
       <div class="panel panel-default" style="margin-top: 20px">
         <div class="panel-heading">wiki</div>
         {% if wiki %}
-        {{ wiki.content}}
+          <div id="mdeditor_preview">
+          <textarea>
+            {{ wiki.content}}
+          </textarea>
+          </div>
         {% else %}
           <div style="text-align: center; margin-top: 30px;" >
             <h4>{{ request.userinfo.project.name }}wiki文档</h4>
@@ -58,11 +64,11 @@
 </div>
 {% endblock %}
 {% block js %}
+  <script src="{% static 'js/editormd.min.js' %}"></script>
   <script>
     $(function (){
         generate_wiki_title_html()
     })
-
     // 定义一个递归的函数，接受一个标题数组和一个父标题id作为参数
     function generate_wiki_title(titles, parent_id) {
         // 创建一个空的HTML字符串
@@ -113,7 +119,28 @@
             }
         })
     }
+  </script>
+{% endblock %}
+{% block js2 %}
+  <script src="{% static 'lib/underscore.min.js' %}"></script>
+  <script src="{% static 'lib/marked.min.js' %}"></script>
+  <script src="{% static 'lib/prettify.min.js' %}"></script>
+  <script src="{% static 'lib/flowchart.min.js' %}"></script>
+  <script src="{% static 'lib/jquery.flowchart.min.js' %}"></script>
+  <script src="{% static 'lib/raphael.min.js' %}"></script>
+  <script src="{% static 'lib/sequence-diagram.min.js' %}"></script>
+  <script src="{% static 'lib/image-dialog.js' %}" %}></script>
+  <script>
+  $(function (){
+      initPreviewMarkDown()
+  })
 
+  function initPreviewMarkDown(){
+      editormd.markdownToHTML("mdeditor_preview",{
+          htmlDecode: "script,style,iframe",
+          imageUpload: true,
 
+      })
+  }
   </script>
 {% endblock %}

@@ -1,6 +1,6 @@
 from django.db import models
 from user.models import UserInfo
-
+from mdeditor.fields import MDTextField
 
 # 项目类
 class ProjectInfo(models.Model):
@@ -18,8 +18,8 @@ class ProjectInfo(models.Model):
     describe = models.TextField(verbose_name="项目简介", max_length=256, null=True, blank=True)
     star_mark = models.BooleanField(verbose_name="星标", default=False)
 
-    # bucket = models.CharField(verbose_name="腾讯云对象储存桶", max_length=128)
-    # regin = models.CharField(verbose_name="腾讯云对象储存桶区域", max_length=32)
+    bucket = models.CharField(verbose_name="腾讯云对象储存桶", max_length=64)
+    regin = models.CharField(verbose_name="腾讯云对象储存桶区域", max_length=16, default="ap-beijing")
 
     creator = models.ForeignKey(verbose_name="创建人", to="user.UserInfo",
                                 on_delete=models.CASCADE, to_field="id")
@@ -61,7 +61,7 @@ class PricePolicy(models.Model):
 
 class ProjectWikiInfo(models.Model):
     title = models.CharField(verbose_name="标题", max_length=64)
-    content = models.CharField(verbose_name="正文", max_length=512)
+    content = MDTextField(verbose_name="正文", max_length=512)
     project = models.ForeignKey(verbose_name="所属项目", to="ProjectInfo",
                                 on_delete=models.CASCADE, null=False,
                                 blank="True")

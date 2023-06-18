@@ -15,7 +15,7 @@ class NormalForm:
         super().__init__(*args, **kargs)
         # 循环所有插件，添加form-control属性
         for name, field in self.fields.items():
-            if name in  self.bootstarp_class_exclue:
+            if name in self.bootstarp_class_exclue:
                 continue
             if field.widget.attrs:
                 field.widget.attrs["class"] = "form-control"

@@ -44,7 +44,7 @@ def get_now_data_str(str_format="%Y-%m-%d %H:%M:%S"):
     return now_time_str
 
 
-# 获取一个项目所有的类名
+# 获取一个类所有的类名
 def get_class_names(module):
     # 创建一个空列表，用来存储类名
     class_names = []
