@@ -1,3 +1,5 @@
+import json
+
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from django.views import View
@@ -5,12 +7,12 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import DeleteView
 
 from bugmanage.views import BaseJsonView
-from project.forms import ProjectWikiModelForm
-from project.models import ProjectWikiInfo, ProjectInfo
+from project.forms import ProjectWikiModelForm, ProjectFileModelForm
+from project.models import ProjectWikiInfo, ProjectInfo, ProjectFileInfo
 from utills.datavalid.datavalid import id_number_vaild
 from utills.projectutills.randomobj import create_random_str
 from utills.tencent.cos import COSBucket
-from utills.tencent.cos_sts import get_credential_demo
+from utills.tencent.cos_sts import get_credential_demo, CosGetAuthorization
 
 
 class ProjectOverView(View):
@@ -36,16 +38,122 @@ class ProjectAnalyze(View):
         return render(request, ProjectAnalyze.template_name)
 
 
-class ProjectFile(View):
+class ProjectFile(BaseJsonView):
+    """
+    Attributes
+    -----------
+    template_name：str html模板路径
+
+    Method
+    --------------
+    get() 返回根目录文件信息
+    post（）新建文件
+    """
     template_name = "project/project_file.html"
 
     def get(self, request, project_id):
-        return render(request, ProjectFile.template_name)
+        # 生成文件url的前缀,用于拼接文件url,打开文件
+        file_url ="https://" + request.userinfo.project.bucket + ".cos." \
+                  + request.userinfo.project.regin + ".myqcloud.com"
+        # 返回新建文件夹的表单
+        context = {"form": ProjectFileModelForm(), "file_url": file_url}
+        file_id = request.GET.get("id")
+
+        # 如果id参数为空字符串或None,返回根目录文件
+        if not file_id:
+            files = ProjectFileInfo.objects.filter(project_id=project_id, path="/").order_by("file_type")
+            context["files"] = files
+            context["now_path"] = "/"
+            return render(request, ProjectFile.template_name, context)
+
+        # 验证id格式是否正确
+        if not id_number_vaild(file_id):
+            return self.error_response("id格式不正确！")
+
+        # 检查请求文件是否为文件夹
+        folder = ProjectFileInfo.objects.filter(project_id=project_id, id=file_id, file_type=0).first()
+        if not folder:
+            return self.error_response("该文件不是文件夹！")
+
+        #返回当前目录
+        context["folder"] = folder
+
+        # 查询文件夹下面的内容
+        files = ProjectFileInfo.objects.filter(parent=folder).order_by("file_type")
+        # 根据是否有文件，返回当前路径和路径下的文件
+        if files.exists():
+            context["files"] = files
+            context["now_path"] = files.first().path
+        else:
+            if folder.path == "/":
+                context["now_path"] = "/" + folder.name
+            else:
+                context["now_path"] = folder.path + "/" + folder.name
+        return render(request, ProjectFile.template_name, context)
+
+    def post(self, request, project_id):
+        # 获取所属项目
+        project = request.userinfo.project
+        folder_id = request.POST.get("folder_id")
+
+        # 验证id格式,如果folder_id为空，parent则为空
+        if not folder_id:
+            parent = None
+        # 验证folder_id格式
+        else:
+            if not id_number_vaild(folder_id):
+                return self.error_response("id格式不正确！")
+            parent = ProjectFileInfo.objects.filter(id=folder_id).first()
+
+        # 根据id获取要在哪添加文件
+        form = ProjectFileModelForm(data=request.POST)
+        ## 获取url相关信息
+        key = request.POST.get("key")
+        size = request.POST.get("size")
+        if form.is_valid():
+            form.instance.project = project
+            form.instance.file_type = request.POST.get("file_type")
+            form.instance.path = request.POST.get("path")
+            form.instance.parent = parent
+            form.instance.alter_user = request.userinfo.user
+            form.instance.size = request.POST.get("size")
+            form.instance.key = request.POST.get("key")
+            form.save()
+            return self.success_response()
+        return self.error_response("数据格式不正确")
 
 
-class ProjectUploadFile(BaseJsonView):
+class ProjectGetAuthorization(BaseJsonView):
+    """
+    -----------
+    Method
+    --------------
+    get() 上传腾讯云成功之后的回调请求
+    post（）获取腾讯云上传文件的临时密钥
+    """
+
     def get(self, request, project_id):
-        return JsonResponse(get_credential_demo())
+        # 确认上传成功
+        file_name = request.GET.get("file_name")
+        key = request.GET.get("key")
+        print("key", key)
+        print("file_name", file_name)
+        return JsonResponse({"message": "success"})
+
+    def post(self, request, project_id):
+        # 请求凭证
+        data = request.body
+        data = json.loads(data)[0]
+        key = data.get("prefix")
+        print("key", key)
+        print("data", data)
+        bucket = request.userinfo.project.bucket
+        cos_get_auth = CosGetAuthorization(bucket)
+        return JsonResponse(cos_get_auth.get_credential())
+
+    @csrf_exempt
+    def dispatch(self, *args, **kwargs):
+        return super(ProjectGetAuthorization, self).dispatch(*args, **kwargs)
 
 
 class ProjectWiki(BaseJsonView):
@@ -181,7 +289,7 @@ def project_wiki_delete(request, project_id):
 
 # 上传图片
 @csrf_exempt
-def project_wili_upload(request, project_id):
+def project_wiki_upload_img(request, project_id):
     # 初始化mdeditor的返回值
     result = {
         'success': 0,

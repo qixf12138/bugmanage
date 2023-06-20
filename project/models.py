@@ -2,6 +2,7 @@ from django.db import models
 from user.models import UserInfo
 from mdeditor.fields import MDTextField
 
+
 # 项目类
 class ProjectInfo(models.Model):
     COLOR_CHOICES = (
@@ -72,4 +73,21 @@ class ProjectWikiInfo(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class ProjectFileInfo(models.Model):
+    isfile_choices = (
+        (0, "文件夹"),
+        (1, "文件")
+    )
+    project = models.ForeignKey(verbose_name="所属项目", to="ProjectInfo", on_delete=models.CASCADE)
+    name = models.CharField(verbose_name="文件夹名称", max_length=64, help_text="文件/文件夹名称")
+    file_type = models.SmallIntegerField(verbose_name="文件类型",choices=isfile_choices)
+    key = models.CharField(verbose_name="cos key", max_length=128, null=True, blank=True)
+    parent = models.ForeignKey(verbose_name="上级文件夹", to="self", related_name="child",
+                               null=True, blank=True, on_delete=models.CASCADE)
+    size = models.IntegerField(verbose_name="文件大小", null=True, blank=True)
+    path = models.CharField(verbose_name="文件路径", max_length=255, default="/")
+    alter_user = models.ForeignKey(verbose_name="最后修改", to=UserInfo, on_delete=models.CASCADE)
+    alter_time = models.DateTimeField(verbose_name="修改时间", auto_now=True)
     

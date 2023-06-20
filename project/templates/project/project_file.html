@@ -1,67 +1,285 @@
 {% extends "layout/manage.html" %}
+{#{% load humanize %}#}
 {% load static %}
-{% block content %}
-  files_test
-<input id="submitBtn" type="button" value="提交" onclick="handleFileInUploading()">
-<input id="fileSelector" type="file">
+{% block css %}
 {% endblock %}
+
+{% block content %}
+  {# 按钮组 #}
+  <div id="btn_group" style="float: right">
+<button type="button" class="btn btn-btn btn-success" onclick="add_modal({{ folder.id }})" >
+  新建
+</button>
+<button type="button" class="btn btn-primary" onclick="upload_file_modal({{ folder.id }})">
+  上传文件
+</button>
+<button type="button" class="btn btn-btn btn-info" >
+  修改
+</button>
+<button type="button" class="btn btn-btn btn-danger" >
+  删除
+</button>
+</div>
+  {# 数据表格 #}
+  <div style="clear:right">
+    <div class="panel panel-default" style="margin-top: 20px">
+    <div class="panel-heading">
+      当前目录：{{ now_path }}
+      {% if folder.path %}
+      <a href="{% url 'project:operate:file' request.userinfo.project.id %}?id={{ folder.parent.id }}" style="right: auto">
+        返回上一级
+      </a>
+      {% endif %}
+    </div>
+      <table class="table table-hover">
+        <thead>
+                <tr>
+                  <th>#</th>
+                  <th>文件/文件夹名称</th>
+                  <th>文件大小</th>
+                  <th>最后修改</th>
+                  <th>修改时间</th>
+                </tr>
+        </thead>
+        <tbody>
+          {% for file in files %}
+                <tr>
+                  <th scope="row">{{ file.index }}</th>
+                  <td>
+                   {% if file.file_type == 0%}
+                    <a href="{% url 'project:operate:file' request.userinfo.project.id %}?id={{ file.id }}">
+                        <i class="fa-solid fa-folder" style="color: #1ca0f2;"></i>
+                      {{ file.name }}
+                    </a>
+                   {% else %}
+                     {% if file.path == "/"  %}
+                     <a href="{{ file_url }}{{ file.path }}{{ file.key }}">
+                     {% else %}
+                     <a href="{{ file_url }}{{ file.path }}/{{ file.key }}">
+                     {% endif %}
+                      {{ file.name }}
+                    </a>
+                   {% endif %}
+                  </td>
+                  {% if  file.size%}
+                  <td>{{ file.size }}</td>
+                  {% else %}
+                  <td>-</td>
+                  {% endif %}
+                  <td>{{ file.alter_user }}</td>
+                  <td>{{ file.alter_time|date}}</td>
+                </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {# 文件夹模态框 #}
+  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title" id="myModalLabel">Modal title</h4>
+        </div>
+        <div class="modal-body">
+          <form id="id_file_form">
+          {% csrf_token %}
+          {{form.as_p}}
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="id_confrim_btn" onclick="add_file()">确认</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  {# 文件模态款 #}
+  <div class="modal fade" id="uploadModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title" id="myModalLabel">Modal title</h4>
+        </div>
+        <div class="modal-body">
+          <!-- 选择要上传的文件 -->
+          <input id="fileSelector" type="file" />
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="id_upload_file_btn">确认</button>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+
 {% block js2 %}
+  <script src="{% static 'js/fontawesome.min.js' %}"></script>
   <script src="{% static 'js/cos-js-sdk-v5.min.js' %}"></script>
   <script>
-    // 存储桶名称，由 bucketname-appid 组成，appid 必须填入，可以在 COS 控制台查看存储桶名称。 https://console.cloud.tencent.com/cos5/bucket
-    var Bucket = 'qixf-1318476280';  /* 存储桶，必须字段 */
+        //项目文件页面地址
+    var  File_Url = "{% url 'project:operate:file' project_id=request.userinfo.project.id %}"
+      //打开新建模态框
+    function add_modal(folder_id){
+        {#clear_modal_form()#}
+        $("#id_confrim_btn").attr("onclick", "file_add(" + folder_id + ")");
+        $('#myModal').modal('toggle')
+    }
 
-    // 存储桶 region 可以在 COS 控制台指定存储桶的概览页查看 https://console.cloud.tencent.com/cos5/bucket/
-    // 关于地域的详情见 https://cloud.tencent.com/document/product/436/6224
-    var Region = 'ap-beijing';     /* 存储桶所在地域，必须字段 */
+    // 打开文件上传模态框
+    function upload_file_modal(folder_id){
+    {#clear_modal_form()#}
+    {#$("#id_upload_file_btn").attr("onclick", "upload_file_modal(" + folder_id + ")");#}
+    $('#uploadModal').modal('toggle')
+  }
 
+    //新建文件
+    function file_add(folder_id,file_type=0,file_data=null){
+        if(folder_id){
+            {% if folder.parent %}
+                file_path = "{{ folder.path }}" + "/" + "{{ folder.name }}"
+            {% else %}
+                file_path = "{{ folder.path }}" + "{{ folder.name }}"
+            {% endif %}
+        }
+        else{
+            folder_id = ""
+            file_path = "/"
+        }
+        // 判断是上传文件还是文件夹
+        if(file_type == 0){
+            file_data = {
+            csrfmiddlewaretoken: $("#id_file_form").children(0).val(),
+            folder_id:folder_id,
+            name:$("#id_name").val(),
+            path:file_path,
+            file_type:file_type,
+        }
+        }
+        else {
+        }
+        $.ajax({
+        url: File_Url,
+        data:file_data,
+        dataType: "json",
+        method: "post",
+        success:function (res){
+            if(res.status==200){
+                console.log(res)
+            }else {
+                alert(res.error_msg)
+            }
+        }
+    })
+
+    }
+  </script>
+  <script>
+    var Bucket = "{{ request.userinfo.project.bucket }}"
+    var Region = "{{ request.userinfo.project.regin }}";
+    //获取临时密钥地址
+    var AuthUrl = '{% url "project:operate:get_cos_auth" request.userinfo.project.id %}'
     // 初始化实例
     var cos = new COS({
     // getAuthorization 必选参数
-      getAuthorization: function (options, callback) {
-          // 初始化时不会调用，只有调用 cos 方法（例如 cos.putObject）时才会进入
-          // 异步获取临时密钥
-          // 服务端 JS 和 PHP 例子：https://github.com/tencentyun/cos-js-sdk-v5/blob/master/server/
-          // STS 详细文档指引看：https://cloud.tencent.com/document/product/436/14048
-          var url = '{% url "project:operate:file_upload" request.userinfo.project.id%}'; // url 替换成您自己的后端服务
-          var xhr = new XMLHttpRequest();
-          xhr.open('GET', url, true);
-          xhr.onload = function (e) {
-              try {
-                  var data = JSON.parse(e.target.responseText);
-                  var credentials = data.credentials;
-              } catch (e) {
-              }
-              if (!data || !credentials) {
+    getAuthorization: function (options, callback) {
+        // 异步获取临时密钥
+        var url = AuthUrl; // url 替换成您自己的后端服务
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', url, true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.onload = function (e) {
+            try {
+                var data = JSON.parse(e.target.responseText);
+                var credentials = data.credentials;
+            } catch (e) {
+            }
+            if (!data || !credentials) {
                 return console.error('credentials invalid:\n' + JSON.stringify(data, null, 2))
-              };
-              callback({
+            };
+            callback({
                 TmpSecretId: credentials.tmpSecretId,
                 TmpSecretKey: credentials.tmpSecretKey,
                 SecurityToken: credentials.sessionToken,
                 // 建议返回服务器时间作为签名的开始时间，避免用户浏览器本地时间偏差过大导致签名错误
-                StartTime: data.startTime, // 时间戳，单位秒，如：1580000000
-                ExpiredTime: data.expiredTime, // 时间戳，单位秒，如：1580000000
+                StartTime: data.startTime,
+                ExpiredTime: data.expiredTime,
+                ScopeLimit: true,
             });
-          };
-          xhr.send();
-      }
-    });
-
-    // 接下来可以通过 cos 实例调用 COS 请求。
-function handleFileInUploading() {
-cos.getObject({
-    Bucket: Bucket, /* 填入您自己的存储桶，必须字段 */
-    Region: Region,  /* 存储桶所在地域，例如 ap-beijing，必须字段 */
-    Key: '博弈论书.txt',  /* 存储在桶里的对象键（例如1.jpg，a/b/test.txt），必须字段 */
-    onProgress: function (progressData) {
-        console.log(JSON.stringify(progressData));
+        };
+        xhr.send(JSON.stringify(options.Scope));
     }
-}, function(err, data) {
-    console.log(err || data.Body);
 });
-}
+    // 获取长度为len的随机字符串
+    function _getRandomString(len) {
+        len = len || 32;
+        var $chars = 'ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz2345678'; // 默认去掉了容易混淆的字符oOLl,9gq,Vv,Uu,I1
+        var maxPos = $chars.length;
+        var random_str = '';
+        for (i = 0; i < len; i++) {
+            random_str += $chars.charAt(Math.floor(Math.random() * maxPos));
+        }
+        return random_str;
+    }
+    // 通过 cos 实例调用 COS 请求。
+    function handleFileInUploading(file) {
+        console.log(file)
+        //生成随机字符串作为Key值
+        var file_fullname = file.name.split('.')
+        var ext = file_fullname.pop()
+        var key_name = _getRandomString()
+        var FileKey = key_name + "." + ext
+        var file_name = file_fullname.join()
+        var file_size = 0
+
+      cos.uploadFile({
+          Bucket: Bucket, /* 存储桶名称，必须字段 */
+          Region: Region,     /* 存储桶所在地域，必须字段 */
+          Key: "{{ now_path }}"+"/"+FileKey,              /* 存储在桶里的对象键（例如:1.jpg，a/b/test.txt，图片.jpg）支持中文，必须字段 */
+          Body: file, // 上传文件对象
+          SliceSize: 1024 * 1024 * 5,     /* 触发分块上传的阈值，超过5MB使用分块上传，小于5MB使用简单上传。可自行设置，非必须 */
+          onProgress: function(progressData) {
+              console.log(JSON.stringify(progressData));
+              file_size = progressData.total
+          }
+      }, function(err, data) {
+          if (err) {
+            console.log('上传失败', err);
+          }
+          else {
+                {% if folder %}
+                    folder_id = {{ folder.id }}
+                {% else %}
+                    folder_id = ""
+                {% endif %}
+                file_data = {
+                              csrfmiddlewaretoken: $("#id_file_form").children(0).val(),
+                              folder_id:folder_id,
+                              name: file_name+"."+ext,
+                              key: FileKey,
+                              file_type: 1,
+                              path: "{{ now_path }}",
+                              size:file_size,
+                }
+                file_add(folder_id=folder_id, file_type=1, file_data=file_data)
+
+          }
+      });
+    }
+
+        /* 选择文件 */
+    document.getElementById('id_upload_file_btn').onclick = function (e) {
+      var file = document.getElementById('fileSelector').files[0];
+      if (!file) {
+        document.getElementById('msg').innerText = '未选择上传文件';
+        return;
+      }
+      handleFileInUploading(file);
+    }
 
   </script>
-
 {% endblock %}

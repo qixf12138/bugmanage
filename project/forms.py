@@ -1,7 +1,7 @@
 from django import forms
 from crispy_forms.helper import FormHelper
 
-from project.models import ProjectInfo, ProjectWikiInfo
+from project.models import ProjectInfo, ProjectWikiInfo, ProjectFileInfo
 from project.widgets import ColorRadioSelect
 from utills.projectutills.forms import BootStrapModelsForm
 from mdeditor.widgets import MDEditorWidget
@@ -51,4 +51,10 @@ class ProjectWikiModelForm(BootStrapModelsForm):
             project_id=request.userinfo.project.id).values_list("id", "title")
         total_data_list += data_list
         self.fields['parent'].choices = total_data_list
+
+
+class ProjectFileModelForm(BootStrapModelsForm):
+    class Meta:
+        model = ProjectFileInfo
+        fields = ["name"]
 
