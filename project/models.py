@@ -90,4 +90,16 @@ class ProjectFileInfo(models.Model):
     path = models.CharField(verbose_name="文件路径", max_length=255, default="/")
     alter_user = models.ForeignKey(verbose_name="最后修改", to=UserInfo, on_delete=models.CASCADE)
     alter_time = models.DateTimeField(verbose_name="修改时间", auto_now=True)
+
+    def get_full_path(self):
+        # 返回文件夹的完整路径
+        if self.path == "/":
+            return "/" + self.name
+        else:
+            return self.path + "/" + self.name
+
+    # 获取文件夹下的内容
+    @staticmethod
+    def get_files_in_folder(project_id, parent=None):
+        return ProjectFileInfo.objects.filter(project_id=project_id, parent=parent).order_by("file_type")
     

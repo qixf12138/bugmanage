@@ -1,10 +1,12 @@
+import asyncio
 import json
 
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
+
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
-from django.views.generic import DeleteView
+from django.views.generic import DeleteView, TemplateView, ListView, CreateView
 
 from bugmanage.views import BaseJsonView
 from project.forms import ProjectWikiModelForm, ProjectFileModelForm
@@ -38,63 +40,161 @@ class ProjectAnalyze(View):
         return render(request, ProjectAnalyze.template_name)
 
 
-class ProjectFile(BaseJsonView):
+# class ProjectFile(BaseJsonView):
+#     """
+#     Attributes
+#     -----------
+#     template_name：str html模板路径
+#
+#     Method
+#     --------------
+#     get() 返回根目录文件信息
+#     post（）新建文件
+#     """
+#     template_name = "project/project_file.html"
+#
+#     # def get(self, request, project_id):
+#     #     # 生成文件url的前缀,用于拼接文件url,打开文件
+#     #     file_url ="https://" + request.userinfo.project.bucket + ".cos." \
+#     #               + request.userinfo.project.regin + ".myqcloud.com"
+#     #     # 返回新建文件夹的表单
+#     #     context = {"form": ProjectFileModelForm(), "file_url": file_url}
+#     #     folder_id = request.GET.get("id")
+#     #
+#     #     # 如果id参数为空字符串或None,返回根目录文件
+#     #     if not folder_id:
+#     #         files = ProjectFileInfo.objects.filter(project_id=project_id, path="/").order_by("file_type")
+#     #         context["files"] = files
+#     #         context["now_path"] = "/"
+#     #         return render(request, ProjectFile.template_name, context)
+#     #
+#     #     # 验证id格式是否正确
+#     #     if not id_number_vaild(folder_id):
+#     #         return self.error_response("id格式不正确！")
+#     #
+#     #     # 检查请求文件是否为文件夹
+#     #     folder = ProjectFileInfo.objects.filter(project_id=project_id, id=folder_id, file_type=0).first()
+#     #     if not folder:
+#     #         return self.error_response("该文件不是文件夹！")
+#     #
+#     #     #返回当前目录
+#     #     context["folder"] = folder
+#     #
+#     #     # 查询文件夹下面的内容
+#     #     files = ProjectFileInfo.objects.filter(parent=folder).order_by("file_type")
+#     #     # 根据是否有文件，返回当前路径和路径下的文件
+#     #     if files.exists():
+#     #         context["files"] = files
+#     #         context["now_path"] = files.first().path
+#     #     else:
+#     #         if folder.path == "/":
+#     #             context["now_path"] = "/" + folder.name
+#     #         else:
+#     #             context["now_path"] = folder.path + "/" + folder.name
+#     #     return render(request, ProjectFile.template_name, context)
+#
+#     def post(self, request, project_id):
+#         # 获取所属项目
+#         project = request.userinfo.project
+#         folder_id = request.POST.get("folder_id")
+#
+#         # 验证id格式,如果folder_id为空，parent则为空
+#         if not folder_id:
+#             parent = None
+#         # 验证folder_id格式
+#         else:
+#             if not id_number_vaild(folder_id):
+#                 return self.error_response("id格式不正确！")
+#             parent = ProjectFileInfo.objects.filter(id=folder_id).first()
+#
+#         # 根据id获取要在哪添加文件
+#         form = ProjectFileModelForm(data=request.POST)
+#         ## 获取url相关信息
+#         key = request.POST.get("key")
+#         size = request.POST.get("size")
+#         if form.is_valid():
+#             form.instance.project = project
+#             form.instance.file_type = request.POST.get("file_type")
+#             form.instance.path = request.POST.get("path")
+#             form.instance.parent = parent
+#             form.instance.alter_user = request.userinfo.user
+#             form.instance.size = request.POST.get("size")
+#             form.instance.key = request.POST.get("key")
+#             form.save()
+#             return self.success_response()
+#         return self.error_response("数据格式不正确")
+
+
+class ProjectFile(ListView, CreateView, BaseJsonView):
     """
     Attributes
+
     -----------
     template_name：str html模板路径
+    model:添加查询model对象
+    form_class:渲染的form对象
+    queryset:返回查询的集合
+    object:渲染表单的对象
 
     Method
     --------------
-    get() 返回根目录文件信息
-    post（）新建文件
+    get_file_url_prefix() 返回拼接cos存储对象url的前缀
+    get_context_data（）渲染context的方法
+    form_valid() 验证form表单的方法
     """
+
     template_name = "project/project_file.html"
+    model = ProjectFileInfo
+    form_class = ProjectFileModelForm
+    queryset = model.objects.none()
+    object = None
 
-    def get(self, request, project_id):
-        # 生成文件url的前缀,用于拼接文件url,打开文件
-        file_url ="https://" + request.userinfo.project.bucket + ".cos." \
-                  + request.userinfo.project.regin + ".myqcloud.com"
-        # 返回新建文件夹的表单
-        context = {"form": ProjectFileModelForm(), "file_url": file_url}
-        file_id = request.GET.get("id")
+    @staticmethod
+    def get_file_url_prefix(request):
+        return "https://" + request.userinfo.project.bucket + ".cos." \
+                   + request.userinfo.project.regin + ".myqcloud.com"
 
+    # def get(self, request, *args, **kwargs):
+    #     self.object = None
+    #     return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["file_url"] = ProjectFile.get_file_url_prefix(self.request)
+        context["form"] = ProjectFile.form_class()
+
+        project_id = self.kwargs["project_id"]
+        folder_id = self.request.GET.get("folder_id")
         # 如果id参数为空字符串或None,返回根目录文件
-        if not file_id:
-            files = ProjectFileInfo.objects.filter(project_id=project_id, path="/").order_by("file_type")
+        if not folder_id:
+            files = ProjectFileInfo.get_files_in_folder(project_id)
             context["files"] = files
             context["now_path"] = "/"
-            return render(request, ProjectFile.template_name, context)
+            return context
 
         # 验证id格式是否正确
-        if not id_number_vaild(file_id):
+        if not id_number_vaild(folder_id):
             return self.error_response("id格式不正确！")
-
         # 检查请求文件是否为文件夹
-        folder = ProjectFileInfo.objects.filter(project_id=project_id, id=file_id, file_type=0).first()
+        folder = ProjectFileInfo.objects.filter(id=folder_id, file_type=0).first()
         if not folder:
             return self.error_response("该文件不是文件夹！")
 
-        #返回当前目录
+        #当前目录的文件夹
         context["folder"] = folder
-
         # 查询文件夹下面的内容
-        files = ProjectFileInfo.objects.filter(parent=folder).order_by("file_type")
+        files = ProjectFileInfo.get_files_in_folder(project_id=project_id, parent=folder)
+
         # 根据是否有文件，返回当前路径和路径下的文件
         if files.exists():
             context["files"] = files
-            context["now_path"] = files.first().path
-        else:
-            if folder.path == "/":
-                context["now_path"] = "/" + folder.name
-            else:
-                context["now_path"] = folder.path + "/" + folder.name
-        return render(request, ProjectFile.template_name, context)
+        context["now_path"] = folder.get_full_path()
+        return context
 
-    def post(self, request, project_id):
+    def form_valid(self, form):
         # 获取所属项目
-        project = request.userinfo.project
-        folder_id = request.POST.get("folder_id")
+        project = self.request.userinfo.project
+        folder_id = self.request.POST.get("folder_id")
 
         # 验证id格式,如果folder_id为空，parent则为空
         if not folder_id:
@@ -106,21 +206,20 @@ class ProjectFile(BaseJsonView):
             parent = ProjectFileInfo.objects.filter(id=folder_id).first()
 
         # 根据id获取要在哪添加文件
-        form = ProjectFileModelForm(data=request.POST)
+        form = ProjectFileModelForm(data=self.request.POST)
         ## 获取url相关信息
-        key = request.POST.get("key")
-        size = request.POST.get("size")
+        # key = self.request.POST.get("key")
+        # size = self.request.POST.get("size")
         if form.is_valid():
             form.instance.project = project
-            form.instance.file_type = request.POST.get("file_type")
-            form.instance.path = request.POST.get("path")
+            form.instance.file_type = self.request.POST.get("file_type")
+            form.instance.path = self.request.POST.get("path")
             form.instance.parent = parent
-            form.instance.alter_user = request.userinfo.user
-            form.instance.size = request.POST.get("size")
-            form.instance.key = request.POST.get("key")
+            form.instance.alter_user = self.request.userinfo.user
+            form.instance.size = self.request.POST.get("size")
+            form.instance.key = self.request.POST.get("key")
             form.save()
             return self.success_response()
-        return self.error_response("数据格式不正确")
 
 
 class ProjectGetAuthorization(BaseJsonView):
